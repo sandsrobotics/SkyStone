@@ -33,6 +33,7 @@ public class XY_to_ang extends LinearOpMode{
 
         leftMotor = hardwareMap.dcMotor.get("left");
         rightMotor = hardwareMap.dcMotor.get("right");
+
         leftMotor.setDirection(DcMotor.Direction.REVERSE);
 
         leftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -92,6 +93,9 @@ public class XY_to_ang extends LinearOpMode{
             telemetry.addData("This is target", target);
             telemetry.update();
 
+            if(gamepad1.a){
+                moveByEncoder(500);
+            }
             if ((Math.abs(gamepad1.left_stick_x)) + (Math.abs(gamepad1.left_stick_y)) + (Math.abs(gamepad1.right_stick_y)) > 0) {
                 hedding = angles.firstAngle;
                     target = Math.atan2(-gamepad1.left_stick_x, -gamepad1.left_stick_y) / Math.PI * 180;
@@ -182,6 +186,34 @@ public class XY_to_ang extends LinearOpMode{
 
     String formatDegrees(double degrees) {
         return String.format(Locale.getDefault(), "%.1f", AngleUnit.DEGREES.normalize(degrees));
+    }
+
+    void moveByEncoder (int EncoderMovement){
+
+        telemetry.update();
+        int encoderTarget = EncoderMovement + leftMotor.getCurrentPosition();
+        double heading = angles.firstAngle;
+        double angleError = angles.firstAngle - heading;
+        int startingPos = leftMotor.getCurrentPosition();
+        int encoderError = encoderTarget - leftMotor.getCurrentPosition();
+        double rot = 1.5; // make drive double, drive pk
+        double Pk = 1.5;
+        double Dk = 1.5;
+        double lastError = angleError;
+
+            while( encoderError >= 0) {
+
+                telemetry.update();
+                rot = (Pk * angleError / 180) + (Dk * (angleError - lastError) / 180);
+                leftMotor.setPower(((rot)) + (((.5) / 2)));
+                rightMotor.setPower(-(rot) + (((.5) / 2)));
+
+                encoderError = encoderTarget - leftMotor.getCurrentPosition();
+                heading = angles.firstAngle;
+                lastError = angleError;
+                angleError = angles.firstAngle - heading;
+                telemetry.addData("encoderError", encoderError);
+        }
     }
 }
 

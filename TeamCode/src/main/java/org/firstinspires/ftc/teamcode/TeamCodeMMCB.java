@@ -12,7 +12,7 @@ public class TeamCodeMMCB extends LinearOpMode { // addition of the hardware's s
     private DcMotor leftFront;
     private DcMotor rightFront;
     private DcMotor slideOut;
-    private Servo Servo;
+    private DcMotor manip;
 
     @Override
 
@@ -20,7 +20,7 @@ public class TeamCodeMMCB extends LinearOpMode { // addition of the hardware's s
         leftFront = hardwareMap.get(DcMotor.class, "leftFront");
         rightFront = hardwareMap.get(DcMotor.class, "rightFront");
         slideOut = hardwareMap.get(DcMotor.class, "slideOut");
-        Servo = hardwareMap.servo.get("left_handAsServo");
+        manip = hardwareMap.get(DcMotor.class, "manip");
 
         waitForStart();
 
@@ -62,14 +62,17 @@ public class TeamCodeMMCB extends LinearOpMode { // addition of the hardware's s
             else {
                 slideOut.setPower(0);
             }
-            // servo
-            if (gamepad1.dpad_down) {
-                ServoPow = ServoPow + 1;
+
+            // manip
+             if (gamepad1.dpad_up) {
+                 manip.setPower(-.5);
             }
-            else if (gamepad1.dpad_up) {
-                ServoPow = ServoPow - 1;
+            else if(gamepad1.dpad_down){
+                 manip.setPower(.5);
             }
-            Servo.setPosition(ServoPow);
+            else{
+                 manip.setPower(0);
+             }
 
         }
     }

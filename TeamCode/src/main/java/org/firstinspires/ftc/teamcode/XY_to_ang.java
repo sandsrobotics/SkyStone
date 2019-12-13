@@ -19,7 +19,7 @@ import java.util.Locale;
 
 @TeleOp
 
-public class XY_to_ang extends LinearOpMode{
+public class XY_to_ang extends LinearOpMode {
     private DcMotor leftMotor;
     private DcMotor rightMotor;
 
@@ -69,11 +69,11 @@ public class XY_to_ang extends LinearOpMode{
         double zPos = position.z;
 
 
-       // double DriveSpeed;
-       // double Rotate;
-       // double v0;
-       // double v1;
-       // double maxValue;
+        // double DriveSpeed;
+        // double Rotate;
+        // double v0;
+        // double v1;
+        // double maxValue;
 
         while (opModeIsActive()) {
 
@@ -93,35 +93,33 @@ public class XY_to_ang extends LinearOpMode{
             telemetry.addData("This is target", target);
             telemetry.update();
 
-            if(gamepad1.a){
-                moveByEncoder(500);
+            if (gamepad1.a) {
+                moveByEncoder(5000);
             }
             if ((Math.abs(gamepad1.left_stick_x)) + (Math.abs(gamepad1.left_stick_y)) + (Math.abs(gamepad1.right_stick_y)) > 0) {
                 hedding = angles.firstAngle;
-                    target = Math.atan2(-gamepad1.left_stick_x, -gamepad1.left_stick_y) / Math.PI * 180;
+                target = Math.atan2(-gamepad1.left_stick_x, -gamepad1.left_stick_y) / Math.PI * 180;
 
                 angleError = target - hedding;
-                    if (angleError > 180) {
-                        angleError = angleError - 360;
-                    } else if (angleError < -180) {
-                        angleError = angleError + 360;
-                    }
+                if (angleError > 180) {
+                    angleError = angleError - 360;
+                } else if (angleError < -180) {
+                    angleError = angleError + 360;
+                }
 
-                rot = (Pk * angleError/180) + (Dk * (angleError - lastError) / 180);
-                leftMotor.setPower((-(rot)) + ( - ( (gamepad1.right_stick_y) /2 ) ) );
-                rightMotor.setPower((rot) + ( - ( (gamepad1.right_stick_y) /2 ) ) );
+                rot = (Pk * angleError / 180) + (Dk * (angleError - lastError) / 180);
+                leftMotor.setPower((-(rot)) + (-((gamepad1.right_stick_y) / 2)));
+                rightMotor.setPower((rot) + (-((gamepad1.right_stick_y) / 2)));
                 lastError = angleError;
 
-            }
-
-            else{
+            } else {
                 leftMotor.setPower(0);
                 rightMotor.setPower(0);
             }
         }
     }
 
-     void composeTelemetry() {
+    void composeTelemetry() {
 
         // At the beginning of each telemetry update, grab a bunch of data
         // from the IMU that we will then display in separate lines.
@@ -188,7 +186,7 @@ public class XY_to_ang extends LinearOpMode{
         return String.format(Locale.getDefault(), "%.1f", AngleUnit.DEGREES.normalize(degrees));
     }
 
-    void moveByEncoder (int EncoderMovement){
+    void moveByEncoder(int EncoderMovement) {
 
         telemetry.update();
         int encoderTarget = EncoderMovement + leftMotor.getCurrentPosition();
@@ -197,23 +195,37 @@ public class XY_to_ang extends LinearOpMode{
         int startingPos = leftMotor.getCurrentPosition();
         int encoderError = encoderTarget - leftMotor.getCurrentPosition();
         double rot = 1.5; // make drive double, drive pk
-        double Pk = 1.5;
-        double Dk = 1.5;
+        double Pk = 2.5 / 180;
+        double Dk = 1.5 / 180;
+        double dri = 1.5;
+        double Dpk = 1;
+        double DDk = .001;
         double lastError = angleError;
+        int LastEncoderError = 0;
 
-            while( encoderError >= 0) {
+        while (encoderError >= 0) {
 
-                telemetry.update();
-                rot = (Pk * angleError / 180) + (Dk * (angleError - lastError) / 180);
-                leftMotor.setPower(((rot)) + (((.5) / 2)));
-                rightMotor.setPower(-(rot) + (((.5) / 2)));
+            telemetry.update();
 
-                encoderError = encoderTarget - leftMotor.getCurrentPosition();
-                heading = angles.firstAngle;
-                lastError = angleError;
-                angleError = angles.firstAngle - heading;
-                telemetry.addData("encoderError", encoderError);
+            rot = (Pk  * angleError)   + (Dk  * (angleError   - lastError));
+            dri = (Dpk * encoderError) + (DDk * (encoderError - LastEncoderError));
+
+            if (dri > 1) {
+                dri = 1;
+            }
+
+            leftMotor.setPower (rot + dri);
+            rightMotor.setPower(dri - rot);
+
+            encoderError = encoderTarget - leftMotor.getCurrentPosition();
+            lastError = angleError;
+            angleError = angles.firstAngle - heading;
+            telemetry.addData("encoderError", encoderError);
+            telemetry.addData("rot", rot);
+            telemetry.addData("angleError", angleError);
+            telemetry.addData("heading", heading);
+
+            LastEncoderError = encoderError;
         }
     }
 }
-

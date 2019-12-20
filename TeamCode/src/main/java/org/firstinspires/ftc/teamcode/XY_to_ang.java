@@ -23,6 +23,18 @@ public class XY_to_ang extends LinearOpMode {
     private DcMotor leftMotor;
     private DcMotor rightMotor;
 
+    double rot;
+    double hedding;
+    double angleError = 0;
+    double target = 0;
+    double lastError = 0;
+    double Pk = 1.5;
+    double Dk = 1.5;
+    Position position;
+    double xPos;
+    double yPos;
+    double zPos;
+
     BNO055IMU imu;
     Orientation angles;
     Acceleration gravity;
@@ -56,19 +68,6 @@ public class XY_to_ang extends LinearOpMode {
 
         imu.startAccelerationIntegration(new Position(), new Velocity(), 1000);
 
-        double angleError = 0;
-        double target = 0;
-        double hedding;
-        double rot;
-        double lastError = 0;
-        double Pk = 1.5;
-        double Dk = 1.5;
-        Position position = imu.getPosition();
-        double xPos = position.x;
-        double yPos = position.y;
-        double zPos = position.z;
-
-
         // double DriveSpeed;
         // double Rotate;
         // double v0;
@@ -76,6 +75,11 @@ public class XY_to_ang extends LinearOpMode {
         // double maxValue;
 
         while (opModeIsActive()) {
+
+            Position position = imu.getPosition();
+            double xPos = position.x;
+            double yPos = position.y;
+            double zPos = position.z;
 
             Acceleration acceleration = imu.getAcceleration();
             Velocity velocity = imu.getVelocity();
@@ -96,23 +100,11 @@ public class XY_to_ang extends LinearOpMode {
             if (gamepad1.a) {
                 moveByEncoder(5000);
             }
-            if ((Math.abs(gamepad1.left_stick_x)) + (Math.abs(gamepad1.left_stick_y)) + (Math.abs(gamepad1.right_stick_y)) > 0) {
-                hedding = angles.firstAngle;
-                target = Math.atan2(-gamepad1.left_stick_x, -gamepad1.left_stick_y) / Math.PI * 180;
+            if (gamepad1.b){
+                moveToAng();
+            }
 
-                angleError = target - hedding;
-                if (angleError > 180) {
-                    angleError = angleError - 360;
-                } else if (angleError < -180) {
-                    angleError = angleError + 360;
-                }
-
-                rot = (Pk * angleError / 180) + (Dk * (angleError - lastError) / 180);
-                leftMotor.setPower((-(rot)) + (-((gamepad1.right_stick_y) / 2)));
-                rightMotor.setPower((rot) + (-((gamepad1.right_stick_y) / 2)));
-                lastError = angleError;
-
-            } else {
+            else {
                 leftMotor.setPower(0);
                 rightMotor.setPower(0);
             }
@@ -228,4 +220,25 @@ public class XY_to_ang extends LinearOpMode {
             LastEncoderError = encoderError;
         }
     }
+
+    void moveToAng(){
+        if ((Math.abs(gamepad1.left_stick_x)) + (Math.abs(gamepad1.left_stick_y)) + (Math.abs(gamepad1.right_stick_y)) > 0) {
+            hedding = angles.firstAngle;
+            target = Math.atan2(-gamepad1.left_stick_x, -gamepad1.left_stick_y) / Math.PI * 180;
+
+            angleError = target - hedding;
+            if (angleError > 180) {
+                angleError = angleError - 360;
+            } else if (angleError < -180) {
+                angleError = angleError + 360;
+            }
+
+            rot = (Pk * angleError / 180) + (Dk * (angleError - lastError) / 180);
+            leftMotor.setPower((-(rot)) + (-((gamepad1.right_stick_y) / 2)));
+            rightMotor.setPower((rot) + (-((gamepad1.right_stick_y) / 2)));
+            lastError = angleError;
+        }
+
+    }
+
 }

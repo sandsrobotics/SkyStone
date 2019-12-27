@@ -129,8 +129,8 @@ public class XY_to_ang extends LinearOpMode {
     public void runOpMode() {
 
         digital0 = hardwareMap.digitalChannel.get("digital0");
-        motor2 = hardwareMap.dcMotor.get("motor2");
-        motor3 = hardwareMap.dcMotor.get("motor3");
+        leftMotor = hardwareMap.dcMotor.get("motor2");
+        rightMotor = hardwareMap.dcMotor.get("motor3");
         sensorColorRange = hardwareMap.colorSensor.get("sensorColorRange");
         servo0 = hardwareMap.servo.get("servo0");
         servo1 = hardwareMap.servo.get("servo1");
@@ -275,9 +275,6 @@ public class XY_to_ang extends LinearOpMode {
 
         targetsSkyStone.activate();
         // end of view
-
-        leftMotor = hardwareMap.dcMotor.get("left");
-        rightMotor = hardwareMap.dcMotor.get("right");
 
         leftMotor.setDirection(DcMotor.Direction.REVERSE);
 

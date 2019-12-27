@@ -11,9 +11,13 @@ import org.firstinspires.ftc.robotcore.external.navigation.Acceleration;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.navigation.Position;
 import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
+
+import com.qualcomm.robotcore.hardware.ColorSensor;
+import com.qualcomm.robotcore.hardware.DistanceSensor;
 
 import java.util.Locale;
 
@@ -41,19 +45,23 @@ import static org.firstinspires.ftc.robotcore.external.navigation.AxesOrder.YZX;
 import static org.firstinspires.ftc.robotcore.external.navigation.AxesReference.EXTRINSIC;
 import static org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer.CameraDirection.BACK;
 
+import com.qualcomm.robotcore.hardware.DigitalChannel;
+import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
+import com.qualcomm.robotcore.hardware.Servo;
+
 @TeleOp
 
 public class XY_to_ang extends LinearOpMode {
 
     private static final VuforiaLocalizer.CameraDirection CAMERA_CHOICE = BACK;
-    private static final boolean PHONE_IS_PORTRAIT = false  ;
+    private static final boolean PHONE_IS_PORTRAIT = false;
 
     private static final String VUFORIA_KEY =
             "Ad6cSm3/////AAABmRkDMfGtWktbjulxwWmgzxl9TiuwUBtfA9n1VM546drOcSfM+JxvMxvI1WrLSLNdapOtOebE6n3BkjTjyj+sTXHoEyyJW/lPPmlX5Ar2AjeYpTW/WZM/lzG8qDPsm0tquhEj3BUisA5GRttyGXffPwfKJZNPy3WDqnPxyY/U2v+jQNfZjsWqNvUfp3a3klhVPYd25N5dliMihK3WogqNQnZM9bwJc1wRT0zcczYBJJrhpws9A5H2FpOZD6Ov7GqT+rJdKrU6bh+smoueINDFeaFuYQVMEeo7VOLgkzOeRDpfFmVOVeJrmUv+mwnxfFthAY5v90e4kgekG5OYzRQDS2ta0dbUpG6GoJMoZU2vASSa";
 
     // We will define some constants and conversions here
-    private static final float mmPerInch        = 25.4f;
-    private static final float mmTargetHeight   = (6) * mmPerInch;          // the height of the center of the target image above the floor
+    private static final float mmPerInch = 25.4f;
+    private static final float mmTargetHeight = (6) * mmPerInch;          // the height of the center of the target image above the floor
 
     // Constant for Stone Target
     private static final float stoneZ = 2.00f * mmPerInch;
@@ -67,15 +75,15 @@ public class XY_to_ang extends LinearOpMode {
 
     // Constants for perimeter targets
     private static final float halfField = 72 * mmPerInch;
-    private static final float quadField  = 36 * mmPerInch;
+    private static final float quadField = 36 * mmPerInch;
 
     // Class Members
     private OpenGLMatrix lastLocation = null;
     private VuforiaLocalizer vuforia = null;
     private boolean targetVisible = false;
-    private float phoneXRotate    = 0;
-    private float phoneYRotate    = 0;
-    private float phoneZRotate    = 0;
+    private float phoneXRotate = 0;
+    private float phoneYRotate = 0;
+    private float phoneZRotate = 0;
 
     // trackables
     List<VuforiaTrackable> allTrackables = new ArrayList<VuforiaTrackable>();
@@ -84,7 +92,6 @@ public class XY_to_ang extends LinearOpMode {
     //Motor
     private DcMotor leftMotor;
     private DcMotor rightMotor;
-
 
 
     double rot;
@@ -99,11 +106,44 @@ public class XY_to_ang extends LinearOpMode {
     double yPos;
     double zPos;
 
+    boolean debug = false;
+
     BNO055IMU imu;
     Orientation angles;
     Acceleration gravity;
+    ColorSensor sensorColor;
+    DistanceSensor sensorDistance;
 
-    @Override public void runOpMode() {
+    private DigitalChannel digital0;
+    private DcMotor motor2;
+    private DcMotor motor3;
+    private ColorSensor sensorColorRange;
+    private Servo servo0;
+    private Servo servo1;
+    private RevBlinkinLedDriver blinkin;
+    private DcMotor motor0;
+    private DcMotor motor1;
+    private DcMotor motor0B;
+
+    @Override
+    public void runOpMode() {
+
+        digital0 = hardwareMap.digitalChannel.get("digital0");
+        motor2 = hardwareMap.dcMotor.get("motor2");
+        motor3 = hardwareMap.dcMotor.get("motor3");
+        sensorColorRange = hardwareMap.colorSensor.get("sensorColorRange");
+        servo0 = hardwareMap.servo.get("servo0");
+        servo1 = hardwareMap.servo.get("servo1");
+        blinkin = hardwareMap.get(RevBlinkinLedDriver.class, "blinkin");
+        motor0 = hardwareMap.dcMotor.get("motor0");
+        motor1 = hardwareMap.dcMotor.get("motor1");
+        motor0B = hardwareMap.dcMotor.get("motor0B");
+
+        // get a reference to the color sensor.
+        sensorColor = hardwareMap.get(ColorSensor.class, "sensor_color_distance");
+
+        // get a reference to the distance sensor that shares the same name.
+        sensorDistance = hardwareMap.get(DistanceSensor.class, "sensor_color_distance");
 
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
         VuforiaLocalizer.Parameters Vparameters = new VuforiaLocalizer.Parameters(cameraMonitorViewId);
@@ -111,7 +151,7 @@ public class XY_to_ang extends LinearOpMode {
         // VuforiaLocalizer.Parameters parameters = new VuforiaLocalizer.Parameters();
 
         Vparameters.vuforiaLicenseKey = VUFORIA_KEY;
-        Vparameters.cameraDirection   = CAMERA_CHOICE;
+        Vparameters.cameraDirection = CAMERA_CHOICE;
 
         //  Instantiate the Vuforia engine
         vuforia = ClassFactory.getInstance().createVuforia(Vparameters);
@@ -184,7 +224,7 @@ public class XY_to_ang extends LinearOpMode {
 
         front1.setLocation(OpenGLMatrix
                 .translation(-halfField, -quadField, mmTargetHeight)
-                .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, 90, 0 , 90)));
+                .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, 90, 0, 90)));
 
         front2.setLocation(OpenGLMatrix
                 .translation(-halfField, quadField, mmTargetHeight)
@@ -200,7 +240,7 @@ public class XY_to_ang extends LinearOpMode {
 
         rear1.setLocation(OpenGLMatrix
                 .translation(halfField, quadField, mmTargetHeight)
-                .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, 90, 0 , -90)));
+                .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, 90, 0, -90)));
 
         rear2.setLocation(OpenGLMatrix
                 .translation(halfField, -quadField, mmTargetHeight)
@@ -215,14 +255,14 @@ public class XY_to_ang extends LinearOpMode {
 
         // Rotate the phone vertical about the X axis if it's in portrait mode
         if (PHONE_IS_PORTRAIT) {
-            phoneXRotate = 90 ;
+            phoneXRotate = 90;
         }
 
         // Next, translate the camera lens to where it is on the robot.
         // In this example, it is centered (left to right), but forward of the middle of the robot, and above ground level.
-        final float CAMERA_FORWARD_DISPLACEMENT  = 4.0f * mmPerInch;   // eg: Camera is 4 Inches in front of robot center
+        final float CAMERA_FORWARD_DISPLACEMENT = 4.0f * mmPerInch;   // eg: Camera is 4 Inches in front of robot center
         final float CAMERA_VERTICAL_DISPLACEMENT = 8.0f * mmPerInch;   // eg: Camera is 8 Inches above ground
-        final float CAMERA_LEFT_DISPLACEMENT     = 0;     // eg: Camera is ON the robot's center line
+        final float CAMERA_LEFT_DISPLACEMENT = 0;     // eg: Camera is ON the robot's center line
 
         OpenGLMatrix robotFromCamera = OpenGLMatrix
                 .translation(CAMERA_FORWARD_DISPLACEMENT, CAMERA_LEFT_DISPLACEMENT, CAMERA_VERTICAL_DISPLACEMENT)
@@ -290,18 +330,36 @@ public class XY_to_ang extends LinearOpMode {
             telemetry.addData("This is target", target);
             telemetry.update();
 
-            if (gamepad1.a) {
-                moveByEncoder(5000);
+            moveByEncoder(500);
+            int skyPos = findPos(findAng());
+
+            if (skyPos == 1) {
+                moveToAng(7.5);
+            } else if (skyPos == 2) {
+                pointToSky();
+            } else {
+                pointToSky();
             }
-            if (gamepad1.b){
-                moveToAng();
-            }
-            if (gamepad1.y){
-                //findAng();
-            }
-            else {
-                leftMotor.setPower(0);
-                rightMotor.setPower(0);
+            getSky();
+            moveToAng(90);
+            moveByEncoder(3000);
+            moveBlockInExact();
+            moveByEncoder(-3000);
+
+
+            if (debug == true) {
+                if (gamepad1.a) {
+                    moveByEncoder(5000);
+                }
+                if (gamepad1.b) {
+                    moveToJoy();
+                }
+                if (gamepad1.y) {
+                    //findAng();
+                } else {
+                    leftMotor.setPower(0);
+                    rightMotor.setPower(0);
+                }
             }
         }
     }
@@ -311,7 +369,8 @@ public class XY_to_ang extends LinearOpMode {
         // At the beginning of each telemetry update, grab a bunch of data
         // from the IMU that we will then display in separate lines.
         telemetry.addAction(new Runnable() {
-            @Override public void run() {
+            @Override
+            public void run() {
                 // Acquiring the angles is relatively expensive; we don't want
                 // to do that in each of the three items that need that info, as that's
                 // three times the necessary expense.
@@ -321,42 +380,49 @@ public class XY_to_ang extends LinearOpMode {
         });
 
         telemetry.addLine()
-                .addData("status", new Func < String > () {
-                    @Override public String value() {
+                .addData("status", new Func<String>() {
+                    @Override
+                    public String value() {
                         return imu.getSystemStatus().toShortString();
                     }
                 })
-                .addData("calib", new Func < String > () {
-                    @Override public String value() {
+                .addData("calib", new Func<String>() {
+                    @Override
+                    public String value() {
                         return imu.getCalibrationStatus().toString();
                     }
                 });
 
         telemetry.addLine()
-                .addData("heading", new Func < String > () {
-                    @Override public String value() {
+                .addData("heading", new Func<String>() {
+                    @Override
+                    public String value() {
                         return formatAngle(angles.angleUnit, angles.firstAngle);
                     }
                 })
-                .addData("roll", new Func < String > () {
-                    @Override public String value() {
+                .addData("roll", new Func<String>() {
+                    @Override
+                    public String value() {
                         return formatAngle(angles.angleUnit, angles.secondAngle);
                     }
                 })
-                .addData("pitch", new Func < String > () {
-                    @Override public String value() {
+                .addData("pitch", new Func<String>() {
+                    @Override
+                    public String value() {
                         return formatAngle(angles.angleUnit, angles.thirdAngle);
                     }
                 });
 
         telemetry.addLine()
-                .addData("grvty", new Func < String > () {
-                    @Override public String value() {
+                .addData("grvty", new Func<String>() {
+                    @Override
+                    public String value() {
                         return gravity.toString();
                     }
                 })
-                .addData("mag", new Func < String > () {
-                    @Override public String value() {
+                .addData("mag", new Func<String>() {
+                    @Override
+                    public String value() {
                         return String.format(Locale.getDefault(), "%.3f",
                                 Math.sqrt(gravity.xAccel * gravity.xAccel +
                                         gravity.yAccel * gravity.yAccel +
@@ -394,14 +460,14 @@ public class XY_to_ang extends LinearOpMode {
 
             telemetry.update();
 
-            rot = (Pk  * angleError)   + (Dk  * (angleError   - lastError));
+            rot = (Pk * angleError) + (Dk * (angleError - lastError));
             dri = (Dpk * encoderError) + (DDk * (encoderError - LastEncoderError));
 
             if (dri > 1) {
                 dri = 1;
             }
 
-            leftMotor.setPower (rot + dri);
+            leftMotor.setPower(rot + dri);
             rightMotor.setPower(dri - rot);
 
             encoderError = encoderTarget - leftMotor.getCurrentPosition();
@@ -416,7 +482,58 @@ public class XY_to_ang extends LinearOpMode {
         }
     }
 
-    void moveToAng(){
+    void getSky() {
+
+        telemetry.update();
+        int encoderTarget = 5000 + leftMotor.getCurrentPosition();
+        double heading = angles.firstAngle;
+        double angleError = angles.firstAngle - heading;
+        int startingPos = leftMotor.getCurrentPosition();
+        int encoderError = encoderTarget - leftMotor.getCurrentPosition();
+        double rot = 1.5; // make drive double, drive pk
+        double Pk = 2.5 / 180;
+        double Dk = 1.5 / 180;
+        double dri = 1.5;
+        double Dpk = 1;
+        double DDk = .001;
+        double lastError = angleError;
+        int LastEncoderError = 0;
+
+        motor2.setPower(0.5);
+        motor3.setPower(0.5);
+
+        while (sensorDistance.getDistance(DistanceUnit.CM) > 6) {
+
+            telemetry.update();
+
+            rot = (Pk * angleError) + (Dk * (angleError - lastError));
+            dri = (Dpk * encoderError) + (DDk * (encoderError - LastEncoderError));
+
+            if (dri > 1) {
+                dri = 1;
+            }
+
+            leftMotor.setPower(rot + dri);
+            rightMotor.setPower(dri - rot);
+
+            encoderError = encoderTarget - leftMotor.getCurrentPosition();
+            lastError = angleError;
+            angleError = angles.firstAngle - heading;
+            telemetry.addData("encoderError", encoderError);
+            telemetry.addData("rot", rot);
+            telemetry.addData("angleError", angleError);
+            telemetry.addData("heading", heading);
+
+            LastEncoderError = encoderError;
+        }
+
+        motor2.setPower(0);
+        motor3.setPower(0);
+
+        moveByEncoder(startingPos - (leftMotor.getCurrentPosition()));
+    }
+
+    void moveToJoy() {
         if ((Math.abs(gamepad1.left_stick_x)) + (Math.abs(gamepad1.left_stick_y)) + (Math.abs(gamepad1.right_stick_y)) > 0) {
             hedding = angles.firstAngle;
             target = Math.atan2(-gamepad1.left_stick_x, -gamepad1.left_stick_y) / Math.PI * 180;
@@ -435,17 +552,39 @@ public class XY_to_ang extends LinearOpMode {
         }
     }
 
-    void findAng(){
+    void moveToAng(double target) {
+
+        hedding = angles.firstAngle;
+        target = Math.atan2(-gamepad1.left_stick_x, -gamepad1.left_stick_y) / Math.PI * 180;
+
+        angleError = target - hedding;
+        if (angleError > 180) {
+            angleError = angleError - 360;
+        } else if (angleError < -180) {
+            angleError = angleError + 360;
+        }
+
+        rot = (Pk * angleError / 180) + (Dk * (angleError - lastError) / 180);
+        leftMotor.setPower(-(rot));
+        rightMotor.setPower(rot);
+        lastError = angleError;
+    }
+
+    double findAng() {
+
+        //find ang stuff
+        double goalAng = 361;
+
         // check all the trackable targets to see which one (if any) is visible.
         targetVisible = false;
         for (VuforiaTrackable trackable : allTrackables) {
-            if (((VuforiaTrackableDefaultListener)trackable.getListener()).isVisible()) {
+            if (((VuforiaTrackableDefaultListener) trackable.getListener()).isVisible()) {
                 telemetry.addData("Visible Target", trackable.getName());
                 targetVisible = true;
 
                 // getUpdatedRobotLocation() will return null if no new information is available since
                 // the last time that call was made, or if the trackable is not currently visible.
-                OpenGLMatrix robotLocationTransform = ((VuforiaTrackableDefaultListener)trackable.getListener()).getUpdatedRobotLocation();
+                OpenGLMatrix robotLocationTransform = ((VuforiaTrackableDefaultListener) trackable.getListener()).getUpdatedRobotLocation();
                 if (robotLocationTransform != null) {
                     lastLocation = robotLocationTransform;
                 }
@@ -463,11 +602,60 @@ public class XY_to_ang extends LinearOpMode {
             // express the rotation of the robot in degrees.
             Orientation rotation = Orientation.getOrientation(lastLocation, EXTRINSIC, XYZ, DEGREES);
             telemetry.addData("Rot (deg)", "{Roll, Pitch, Heading} = %.0f, %.0f, %.0f", rotation.firstAngle, rotation.secondAngle, rotation.thirdAngle);
-        }
-        else {
+            goalAng = rotation.thirdAngle;
+        } else {
             telemetry.addData("Visible Target", "none");
+            goalAng = 361;
         }
         telemetry.update();
+        return (goalAng);
     }
+
+
+    int findPos(double goalAng) {
+        if (goalAng == 361) {
+            return (1);
+        } else if (goalAng < 0) {
+            return (2);
+        } else {
+            return (3);
+        }
     }
+
+    void pointToSky() {
+
+        double heading = angles.firstAngle;
+        double target = findAng();
+        double angleError = target - heading;
+
+        while ((angleError > .1) || (angleError < -0.1)) {
+
+            heading = angles.firstAngle;
+            target = findAng();
+            angleError = target - heading;
+
+            if (angleError > 180) {
+                angleError = angleError - 360;
+            } else if (angleError < -180) {
+                angleError = angleError + 360;
+            }
+
+            rot = (Pk * angleError / 180) + (Dk * (angleError - lastError) / 180);
+            leftMotor.setPower(-(rot));
+            rightMotor.setPower(rot);
+            lastError = angleError;
+        }
+    }
+
+
+    void moveBlockInExact() {
+
+        while (sensorDistance.getDistance(DistanceUnit.CM) >= 6) {
+            motor2.setPower(0.5);
+            motor3.setPower(0.5);
+        }
+        motor2.setPower(0);
+        motor3.setPower(0);
+    }
+}
 

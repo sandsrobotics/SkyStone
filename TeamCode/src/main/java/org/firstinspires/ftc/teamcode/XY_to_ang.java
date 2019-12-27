@@ -132,7 +132,7 @@ public class XY_to_ang extends LinearOpMode {
         leftMotor = hardwareMap.dcMotor.get("motor2");
         rightMotor = hardwareMap.dcMotor.get("motor3");
         sensorColorRange = hardwareMap.colorSensor.get("sensorColorRange");
-        servo0 = hardwareMap.servo.get("servo0");
+        servo0 = hardwareMap.servo.get("servo0"); // test
         servo1 = hardwareMap.servo.get("servo1");
         blinkin = hardwareMap.get(RevBlinkinLedDriver.class, "blinkin");
         motor0 = hardwareMap.dcMotor.get("motor0");

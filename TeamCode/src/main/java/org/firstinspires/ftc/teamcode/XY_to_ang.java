@@ -99,14 +99,16 @@ public class XY_to_ang extends LinearOpMode {
     double angleError = 0;
     double target = 0;
     double lastError = 0;
-    double Pk = 1.5;
-    double Dk = 1.5;
+    double Pk = 5;
+    double Dk = 5;
     Position position;
     double xPos;
     double yPos;
     double zPos;
 
-    boolean debug = false;
+    int skyPosTest = findPos(findAng());
+
+    boolean debug = true;
 
     BNO055IMU imu;
     Orientation angles;
@@ -129,21 +131,15 @@ public class XY_to_ang extends LinearOpMode {
     public void runOpMode() {
 
         digital0 = hardwareMap.digitalChannel.get("digital0");
-        leftMotor = hardwareMap.dcMotor.get("motor2");
-        rightMotor = hardwareMap.dcMotor.get("motor3");
+        motor0B = hardwareMap.dcMotor.get("motor0B");
+        leftMotor = hardwareMap.dcMotor.get("motor0");
+        rightMotor = hardwareMap.dcMotor.get("motor1");
+        motor2 = hardwareMap.dcMotor.get("motor2");
+        motor3 = hardwareMap.dcMotor.get("motor3");
         sensorColorRange = hardwareMap.colorSensor.get("sensorColorRange");
         servo0 = hardwareMap.servo.get("servo0"); // test
         servo1 = hardwareMap.servo.get("servo1");
         blinkin = hardwareMap.get(RevBlinkinLedDriver.class, "blinkin");
-        motor0 = hardwareMap.dcMotor.get("motor0");
-        motor1 = hardwareMap.dcMotor.get("motor1");
-        motor0B = hardwareMap.dcMotor.get("motor0B");
-
-        // get a reference to the color sensor.
-        sensorColor = hardwareMap.get(ColorSensor.class, "sensor_color_distance");
-
-        // get a reference to the distance sensor that shares the same name.
-        sensorDistance = hardwareMap.get(DistanceSensor.class, "sensor_color_distance");
 
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
         VuforiaLocalizer.Parameters Vparameters = new VuforiaLocalizer.Parameters(cameraMonitorViewId);
@@ -276,7 +272,7 @@ public class XY_to_ang extends LinearOpMode {
         targetsSkyStone.activate();
         // end of view
 
-        leftMotor.setDirection(DcMotor.Direction.REVERSE);
+        rightMotor.setDirection(DcMotor.Direction.REVERSE);
 
         leftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         rightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -327,33 +323,44 @@ public class XY_to_ang extends LinearOpMode {
             telemetry.addData("This is target", target);
             telemetry.update();
 
-            moveByEncoder(500);
-            int skyPos = findPos(findAng());
+            if(debug == false) {
+                moveByEncoder(50);
+                int skyPos = findPos(findAng());
 
-            if (skyPos == 1) {
-                moveToAng(7.5);
-            } else if (skyPos == 2) {
-                pointToSky();
-            } else {
-                pointToSky();
+                if (skyPos == 1) {
+                    moveToAng(7.5);
+                } else if (skyPos == 2) {
+                    pointToSky();
+                } else {
+                    pointToSky();
+                }
+                getSky();
+                moveToAng(90);
+                moveByEncoder(3000);
+                moveBlockInExact();
+                moveByEncoder(-3000);
             }
-            getSky();
-            moveToAng(90);
-            moveByEncoder(3000);
-            moveBlockInExact();
-            moveByEncoder(-3000);
 
 
             if (debug == true) {
                 if (gamepad1.a) {
-                    moveByEncoder(5000);
+                    moveByEncoder(600);
                 }
                 if (gamepad1.b) {
-                    moveToJoy();
+                    pointToSky();
                 }
                 if (gamepad1.y) {
-                    //findAng();
-                } else {
+                    getSky();
+                }
+                if(gamepad1.x){
+                    while(gamepad1.x) {
+                        telemetry.addData("findAng", findAng());
+                        telemetry.addData("heading", angles.thirdAngle);
+                        telemetry.addData("pitch", angles.firstAngle);
+                        telemetry.addData("rollypoly", angles.firstAngle);
+                    }
+                }
+                else {
                     leftMotor.setPower(0);
                     rightMotor.setPower(0);
                 }
@@ -447,7 +454,7 @@ public class XY_to_ang extends LinearOpMode {
         double rot = 1.5; // make drive double, drive pk
         double Pk = 2.5 / 180;
         double Dk = 1.5 / 180;
-        double dri = 1.5;
+        double dri = 1.5; // 383.6
         double Dpk = 1;
         double DDk = .001;
         double lastError = angleError;
@@ -621,15 +628,18 @@ public class XY_to_ang extends LinearOpMode {
 
     void pointToSky() {
 
+        double Pk = 5;
+
+        telemetry.update();
         double heading = angles.firstAngle;
         double target = findAng();
-        double angleError = target - heading;
+        double angleError = target + heading;
 
-        while ((angleError > .1) || (angleError < -0.1)) {
-
+        while ((angleError > .5) || (angleError < -0.5)) {
+            telemetry.update();
             heading = angles.firstAngle;
-            target = findAng();
-            angleError = target - heading;
+            //target = findAng();
+            angleError = target + heading;
 
             if (angleError > 180) {
                 angleError = angleError - 360;
@@ -637,7 +647,7 @@ public class XY_to_ang extends LinearOpMode {
                 angleError = angleError + 360;
             }
 
-            rot = (Pk * angleError / 180) + (Dk * (angleError - lastError) / 180);
+            rot = (Pk * angleError / 180); //   + (Dk * (angleError - lastError) / 180 )
             leftMotor.setPower(-(rot));
             rightMotor.setPower(rot);
             lastError = angleError;

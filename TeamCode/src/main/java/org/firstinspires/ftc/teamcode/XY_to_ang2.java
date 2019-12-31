@@ -94,7 +94,7 @@ public class XY_to_ang2 extends LinearOpMode {
     double lastError = 0;
     double Pk = 1.5;
     double Dk = 1.5;
-    int step = 1;
+    int step = 3;
 
     double blockAnglish = 0;
 
@@ -212,6 +212,7 @@ public class XY_to_ang2 extends LinearOpMode {
             //telemetry.addData("This is E", angleError);
             //telemetry.addData("This is target", target);
 
+            /*
             if (tfod != null) {
                 // getUpdatedRecognitions() will return null if no new information is available since
                 // the last time that call was made.
@@ -235,27 +236,35 @@ public class XY_to_ang2 extends LinearOpMode {
                     //telemetry.update();
                 }
             }
+            */
+
 
             debug = false; // switch modes
 
             if(debug == false) {
                 skyPos = 1; // &*&*&*&*&*&*&*&*&*&*&*&*&*&*&*# added for testing
-                step = 3;// &*&*&*&*&*&*&*&*&*&*&*&*&*&*&*# added for testing
 
                 if (step == 1){ //************ move robot forward       //works!!
+
+
                     moveByEncoder(50);
 
                     step += 1;
+                    telemetry.addLine("step 1 Complete");
                     telemetry.update();
-                    sleep(1000);
+                    sleep(5000);
                 }
                 else if (step == 2){ //************ find position of block      //NOT WORKING, commented function for testing
                     //skyPos = findPos(findAng());
                     step += 1;
+                    telemetry.addLine("step 2 Complete");
                     telemetry.update();
-                    sleep(1000);
+                    sleep(5000);
                 }
                 else if(step == 3){ //************ point to block       //NOT WORKING
+
+                    telemetry.addLine("step 3 point to block");
+                    telemetry.update();
 
                     if (skyPos == 1) {
                         moveToAng(7.5);
@@ -266,50 +275,81 @@ public class XY_to_ang2 extends LinearOpMode {
                     }
 
                     step += 1;
+                    telemetry.addLine("step 3 Complete");
                     telemetry.update();
-                    sleep(1000);
+                    sleep(5000);
                 }
                 else if (step == 4){ //************ put down the arm  //TESTING
+
+                    telemetry.addLine("step 4 put arm dowm");
+                    telemetry.update();
+
                     putDown();
 
                     step += 1;
+                    telemetry.addLine("step 4 Complete");
                     telemetry.update();
-                    sleep(1000);
+                    sleep(5000);
                 }
                 else if(step == 5){ //************ get the block and come back //TESTING
+
+                    telemetry.addLine("step 5 get block and come back");
+                    telemetry.update();
+
                     getSky();
 
                     step += 1;
+                    telemetry.addLine("step 5 Complete");
                     telemetry.update();
-                    sleep(1000);
+                    sleep(5000);
                 }
                 else if(step == 6){ //************ point to the foundation //WORKS (may be the wrong direction)
+
+                    telemetry.addLine("step 6 Point to foundation");
+                    telemetry.update();
+
                     moveToAng(90);
 
                     step += 1;
+                    sleep(5000);
+                    telemetry.addLine("step 6 Complete");
                     telemetry.update();
-                    sleep(1000);
                 }
                 else if(step == 7){ //************ go to foundation // WORKS (may not go the right distance)
-                    moveByEncoder(3000);
+
+                    telemetry.addLine("step 7 goto foundation");
+                    telemetry.update();
+
+                    moveByEncoder(300);
 
                     step += 1;
+                    telemetry.addLine("step 7 Complete");
                     telemetry.update();
-                    sleep(1000);
+                    sleep(5000);
                 }
                 else if(step == 8){ //************ put out block // WORKS
+
+                    telemetry.addLine("step 8 put block out");
+                    telemetry.update();
+
                     moveBlockInExact();
 
                     step += 1;
+                    telemetry.addLine("step 8 Complete");
                     telemetry.update();
-                    sleep(1000);
+                    sleep(5000);
                 }
                 else if(step == 9){ //************ go back
-                    moveByEncoder(-3000); // WORKS (may not go the right distance)
+
+                    telemetry.addLine("step 9 go back");
+                    telemetry.update();
+
+                    moveByEncoder(-300); // WORKS (may not go the right distance)
 
                     step += 1;
+                    telemetry.addLine("step 9 Complete");
                     telemetry.update();
-                    sleep(1000);
+                    sleep(5000);
                 }
 
 
@@ -339,9 +379,13 @@ public class XY_to_ang2 extends LinearOpMode {
                 }
             }
 
-            telemetry.update();
+            //telemetry.update();
 
         }//while opModeIsActive end
+
+        if (tfod != null) {
+            tfod.shutdown();
+        }
     }//runOpMode end
 
     /********************************
@@ -350,10 +394,10 @@ public class XY_to_ang2 extends LinearOpMode {
 
     void putDown(){
 
+        motor0B.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         while (motor0B.getCurrentPosition() > -1000 + 20) {
             motor0B.setTargetPosition(-1000);
-            motor0B.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            if (motor0B.getCurrentPosition() > -420) {
+            motor0B.setMode(DcMotor.RunMode.RUN_TO_POSITION);if (motor0B.getCurrentPosition() > -420) {
                 motor0B.setPower(0.5);
             } else if (motor0B.getCurrentPosition() > -1000) {
                 motor0B.setPower(0.1);
@@ -402,6 +446,8 @@ public class XY_to_ang2 extends LinearOpMode {
 
             LastEncoderError = encoderError;
         }
+        leftMotor.setPower(0);
+        rightMotor.setPower(0);
     }
 
     /********************************
@@ -488,20 +534,35 @@ public class XY_to_ang2 extends LinearOpMode {
      ********************************/
     void moveToAng(double target) {
 
-        angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
-        heading = angles.firstAngle;
+        double Pk = 1.5;
+        double Dk = 0;
+        double Ik = 0.1;
+        double SIk = 0;
 
-        angleError = target - heading;
-        if (angleError > 180) {
-            angleError = angleError - 360;
-        } else if (angleError < -180) {
-            angleError = angleError + 360;
+        angleError = 2;
+
+        while ((angleError > 1) || (angleError < -1)) {
+
+            angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+            heading = angles.firstAngle;
+
+            angleError = target - heading;
+            if (angleError > 180) {
+                angleError = angleError - 360;
+            } else if (angleError < -180) {
+                angleError = angleError + 360;
+            }
+
+            rot = (Pk * angleError / 180) + SIk + (Dk * (angleError - lastError) / 180);
+            leftMotor.setPower(-(rot));
+            rightMotor.setPower(rot);
+            lastError = angleError;
+            SIk = SIk + (Ik * angleError / 180);
+
         }
 
-        rot = (Pk * angleError / 180) + (Dk * (angleError - lastError) / 180);
-        leftMotor.setPower(-(rot));
-        rightMotor.setPower(rot);
-        lastError = angleError;
+        leftMotor.setPower(0);
+        rightMotor.setPower(0);
     }
 
     /********************************

@@ -181,8 +181,9 @@ public class XY_to_ang2 extends LinearOpMode {
                 if (step == 1) //Move Foward
                 { //************ move robot forward //works!!
 
+                    telemetry.addData("this is me tester boyyyyyyy",blockAnglish);
                     moveByEncoderNOPID(500);
-
+                    telemetry.addData("this is me tester girlllllllll",blockAnglish);
                     step += 1;
                     telemetry.addLine("step 1 Complete");telemetry.update();
 
@@ -192,7 +193,7 @@ public class XY_to_ang2 extends LinearOpMode {
                         moveAngNoPID(blockAnglish - 1);
                     }
                     else if(blockCollected == 1){
-                        moveAngNoPID(blockAnglish - 2);
+                        moveAngNoPID(blockAnglish + 5);
                     }
 
                     telemetry.addData("Completed step ",step);telemetry.update();
@@ -227,10 +228,10 @@ public class XY_to_ang2 extends LinearOpMode {
                 { //************ point to the foundation //WORKS (may be the wrong direction)
 
                     if(RED_SIDE){
-                        moveToAngNoPID(-85);
+                        moveToAngNoPID(-90);
                     }
                     else {
-                        moveToAngNoPID(95);
+                        moveToAngNoPID(90);
                     }
 
                     step += 1;
@@ -238,7 +239,7 @@ public class XY_to_ang2 extends LinearOpMode {
                 } else if (step == 7) // go to foundation
                 { //************ go to foundation // WORKS (may not go the right distance)
 
-                    moveByEncoderNOPID(1400);
+                    moveByEncoderNOPID(1500);
 
                     step += 1;
                     telemetry.addLine("step 7 Complete");telemetry.update();
@@ -256,12 +257,12 @@ public class XY_to_ang2 extends LinearOpMode {
                 } else if (step == 9) // Go Back for more block?
                 { //************ go back
 
-                    if (blockCollected < NUMBER_BLOCK_TO_PICKUP){
-                        moveByEncoderBackwardsNoPID(1400); // WORKS (may not go the right distance)
+                    if (blockCollected < 1){
+                        moveByEncoderBackwardsNoPID(1500); // WORKS (may not go the right distance)
                         moveToAngNoPID(0);
                         step = 2;
                         telemetry.addLine("step 9 Complete");telemetry.update();
-                        blockCollected += 1;
+                        blockCollected = blockCollected + 1;
                     }
                     else {
                         moveByEncoderBackwardsNoPID(400); // WORKS (may not go the right distance)

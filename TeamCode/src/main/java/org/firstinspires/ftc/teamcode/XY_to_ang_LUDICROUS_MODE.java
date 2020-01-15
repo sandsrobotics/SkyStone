@@ -1,58 +1,35 @@
 package org.firstinspires.ftc.teamcode;
-import android.app.Activity;
-import android.graphics.Color;
-import android.view.View;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
 import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
-
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
-import org.firstinspires.ftc.robotcore.external.Func;
-import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
-import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
-import org.firstinspires.ftc.robotcore.external.navigation.Acceleration;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
-import org.firstinspires.ftc.robotcore.external.navigation.Position;
-import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
-import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer.CameraDirection;
-import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
-import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
-import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
 import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
 import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-import static org.firstinspires.ftc.robotcore.external.navigation.AngleUnit.DEGREES;
-import static org.firstinspires.ftc.robotcore.external.navigation.AxesOrder.XYZ;
-import static org.firstinspires.ftc.robotcore.external.navigation.AxesOrder.YZX;
-import static org.firstinspires.ftc.robotcore.external.navigation.AxesReference.EXTRINSIC;
 import static org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer.CameraDirection.BACK;
 
 @Autonomous
 
-public class XY_to_ang2 extends LinearOpMode {
+public class XY_to_ang_LUDICROUS_MODE extends LinearOpMode {
 
     boolean DEBUG = false;          //Duh!
     int NUMBER_BLOCK_TO_PICKUP = 2; //wish I had # define
@@ -153,136 +130,51 @@ public class XY_to_ang2 extends LinearOpMode {
 
         while (opModeIsActive()) {
 
-            telemetry.addData("lift Motor",liftMotor.getCurrentPosition());
-            telemetry.addData("Distance (cm)",
-                    String.format(Locale.US, "%.02f", sensorDistance.getDistance(DistanceUnit.CM)));
-            double blockAnglish =7;
-
-            //region Find Block Location
-            if (tfod != null ) {
-                // getUpdatedRecognitions() will return null if no new information is available since
-                // the last time that call was made.
-                List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
-                if (updatedRecognitions != null) {
-                    telemetry.addData("# Object Detected", updatedRecognitions.size());
-                    // step through the list of recognitions and display boundary info.
-                    int i = 0;
-                    for (Recognition recognition : updatedRecognitions) {
-                        if(recognition.getLabel()=="Skystone") {
-                            blockAnglish =( ( (recognition.getLeft() + recognition.getRight())/2) - 350 ) / 20;
-                            telemetry.addData("Angleish",blockAnglish);
-                        }
-                    }
-                }
-            }
-            //endregion
-
-            if (DEBUG == false) {
-                if (step == 1) //Move Foward
-                { //************ move robot forward //works!!
-
-                    telemetry.addData("this is me tester boyyyyyyy",blockAnglish);
+            if (DEBUG == false){
+                if(step == 1) {
                     moveByEncoderNOPID(500);
-                    telemetry.addData("this is me tester girlllllllll",blockAnglish);
+                    telemetry.addLine("0");
                     step += 1;
-                    telemetry.addLine("step 1 Complete");telemetry.update();
-
-                } else if (step == 2) // point to block
-                { //************ find position of block and point
-                    if(blockCollected == 0){
-                        moveAngNoPID(blockAnglish - 1);
-                    }
-                    else if(blockCollected == 1){
-                        moveAngNoPID(blockAnglish + 5);
-                    }
-
-                    telemetry.addData("Completed step ",step);telemetry.update();
-                    step += 1;
-
-                } else if (step == 3) // put intake down
-                {
-
-                    putDown();
-
-                    step += 1;
-                    telemetry.addLine("step 3 Complete");telemetry.update();
-
-                } else if (step == 4) // Get Block and return
-                {
-
-                    pointToSkyNoPID();
-
-                    step += 1;
-                    telemetry.addLine("step 4 Complete");telemetry.update();
-
-                } else if (step == 5)
-                { //************ get the block and come back //TESTING
-
-                    startIntake();
-                    moveByEncoderNOPID(750);
-                    stopIntake();
-                    moveByEncoderBackwardsNoPID(750);
-
-                    step += 1;
-                    telemetry.addLine("not in use step 5 Complete");telemetry.update();
-
-                } else if (step == 6) //Point to foundation
-                { //************ point to the foundation //WORKS (may be the wrong direction)
-
-                    if(RED_SIDE){
-                        moveToAngNoPID(-90);
-                    }
-                    else {
-                        moveToAngNoPID(90);
-                    }
-
-                    step += 1;
-                    telemetry.addLine("step 6 Complete");telemetry.update();
-                } else if (step == 7) // go to foundation
-                { //************ go to foundation // WORKS (may not go the right distance)
-
-                    moveByEncoderNOPID(1500);
-
-                    step += 1;
-                    telemetry.addLine("step 7 Complete");telemetry.update();
-
-                } else if (step == 8) // put out block
-                { //************ put out block // WORKS
-
-                    startOuttake();
-                    sleep(1000);
-                    stopIntake();
-
-                    step += 1;
-                    telemetry.addLine("step 8 Complete");telemetry.update();
-
-                } else if (step == 9) // Go Back for more block?
-                { //************ go back
-
-                    if (blockCollected < 1){
-                        moveByEncoderBackwardsNoPID(1500); // WORKS (may not go the right distance)
-                        moveToAngNoPID(0);
-                        step = 2;
-                        telemetry.addLine("step 9 Complete");telemetry.update();
-                        blockCollected = blockCollected + 1;
-                    }
-                    else {
-                        moveByEncoderBackwardsNoPID(400); // WORKS (may not go the right distance)
-                        putUp();
-                        step += 1;
-                        telemetry.addLine("step 9 Complete");telemetry.update();
-                    }
-
-                } else if (step == 10)
-                { //************ go back
-
-                    step += 1;
-                    telemetry.addLine("step 10 Complete");telemetry.update();
-
-                } else {
-                    angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
-                    telemetry.addData("angles.firstAngle",angles.firstAngle);telemetry.update();
                 }
+                if(step == 2) {
+                    putDown();
+                    telemetry.addLine("1");
+                    step += 1;
+                }
+                if(step == 3) {
+                    startIntake();
+                    telemetry.addLine("2");
+                    step += 1;
+                }
+                if (step == 4) {
+                    moveByEncoderNOPID(1000);
+                    telemetry.addLine("3");
+                    step += 1;
+                }
+                if(step == 5) {
+                    stopIntake();
+                    telemetry.addLine("4");
+                    step += 1;
+                }
+                if(step == 6) {
+                    moveByEncoderBackwardsNoPID(800);
+                    telemetry.addLine("5");
+                    step += 1;
+                }
+                if(step == 7) {
+                    moveToAngNoPID(-90);
+                    telemetry.addLine("6");
+                    step += 1;
+                }
+                if(step == 8) {
+                    moveByEncoderNOPID(1500);
+                    telemetry.addLine("7");
+                    step += 1;
+                }
+                if(step == 9){
+                    moveToAngNoPID(90);
+                }
+
             }
 
             if (DEBUG == true) { //use this area to test functions

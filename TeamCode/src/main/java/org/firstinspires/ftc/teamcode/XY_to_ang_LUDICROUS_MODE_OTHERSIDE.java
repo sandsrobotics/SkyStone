@@ -23,13 +23,12 @@ import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
 import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
 
 import java.util.List;
-import java.util.Locale;
 
 import static org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer.CameraDirection.BACK;
 
 @Autonomous
 
-public class XY_to_ang_LUDICROUS_MODE extends LinearOpMode {
+public class XY_to_ang_LUDICROUS_MODE_OTHERSIDE extends LinearOpMode {
 
     boolean DEBUG = false;          //Duh!
     int NUMBER_BLOCK_TO_PICKUP = 2; //wish I had # define
@@ -165,18 +164,19 @@ public class XY_to_ang_LUDICROUS_MODE extends LinearOpMode {
                     step += 1;
                 }
                 if(step == 7) {
-                    moveToAngNoPID(-81);
+                    moveToAngNoPID(80);
                     telemetry.addLine("6");
                     step += 1;
                 }
                 if(step == 8) {
                     moveByEncoderNOPID(2400);
                     moveByEncoderNOPID(950);
+                    moveByEncoderNOPID(350);
                     telemetry.addLine("7");
                     step += 1;
                 }
                 if(step == 9){
-                    moveToAngNoPID(180);
+                    moveToAngNoPID(178);
                     telemetry.addLine("8");
                     step += 1;
                 }
@@ -185,7 +185,7 @@ public class XY_to_ang_LUDICROUS_MODE extends LinearOpMode {
                     servo0.setPosition(1);
                     servo1.setPosition(0);
 
-                    moveByEncoderBackwardsNoPID(700);
+                    moveByEncoderBackwardsNoPID(500);
 
                     telemetry.addLine("9");
                     step += 1;
@@ -199,7 +199,7 @@ public class XY_to_ang_LUDICROUS_MODE extends LinearOpMode {
                 }
                 if(step == 12){
 
-                    moveToAngNoPID2(90);
+                    moveToAngNoPID2(-90);
                     telemetry.addLine("12");
                     step += 1;
 

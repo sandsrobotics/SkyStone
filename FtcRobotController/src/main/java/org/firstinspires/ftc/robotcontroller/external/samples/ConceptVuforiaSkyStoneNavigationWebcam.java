@@ -32,6 +32,7 @@ package org.firstinspires.ftc.robotcontroller.external.samples;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
@@ -105,6 +106,12 @@ public class ConceptVuforiaSkyStoneNavigationWebcam extends LinearOpMode {
     private static final String VUFORIA_KEY =
             " --- YOUR NEW VUFORIA KEY GOES HERE  --- ";
 
+    //initializing motors
+    private DcMotor leftMotor;
+    private DcMotor rightMotor;
+
+
+
     // Since ImageTarget trackables use mm to specifiy their dimensions, we must use mm for all the physical dimension.
     // We will define some constants and conversions here
     private static final float mmPerInch        = 25.4f;
@@ -139,7 +146,23 @@ public class ConceptVuforiaSkyStoneNavigationWebcam extends LinearOpMode {
     private float phoneYRotate    = 0;
     private float phoneZRotate    = 0;
 
+    // my variables
+    private boolean foundBlock = false;
+
     @Override public void runOpMode() {
+
+        // mapping the motors and configuring them
+        leftMotor = hardwareMap.dcMotor.get("motor0");
+        rightMotor = hardwareMap.dcMotor.get("motor1");
+        // brake
+        leftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        // direction
+        rightMotor.setDirection(DcMotor.Direction.REVERSE);
+        // encoder stuff
+        leftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
         /*
          * Retrieve the camera we are to use.
          */
@@ -348,6 +371,9 @@ public class ConceptVuforiaSkyStoneNavigationWebcam extends LinearOpMode {
                 }
             }
 
+            //my code
+            moveTillBlock(.2);
+
             // Provide feedback as to where the robot is located (if we know).
             if (targetVisible) {
                 // express position (translation) of robot in inches.
@@ -359,13 +385,44 @@ public class ConceptVuforiaSkyStoneNavigationWebcam extends LinearOpMode {
                 Orientation rotation = Orientation.getOrientation(lastLocation, EXTRINSIC, XYZ, DEGREES);
                 telemetry.addData("Rot (deg)", "{Roll, Pitch, Heading} = %.0f, %.0f, %.0f", rotation.firstAngle, rotation.secondAngle, rotation.thirdAngle);
             }
-            else {
-                telemetry.addData("Visible Target", "none");
+            else if(foundBlock) {
+
+                telemetry.addData("block","found");
+
+            }
+            else{
+                telemetry.addData("block", "not found");
             }
             telemetry.update();
         }
 
+
+
         // Disable Tracking when we are done;
         targetsSkyStone.deactivate();
     }
+
+    // put your functions
+    void moveTillBlock(double motorPower){
+
+        if(!targetVisible){
+
+            leftMotor.setTargetPosition(leftMotor.getCurrentPosition()+100);
+            leftMotor.setPower(motorPower);
+            leftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+            rightMotor.setTargetPosition(rightMotor.getCurrentPosition()+100);
+            rightMotor.setPower(motorPower);
+            rightMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        }
+
+        else if (targetVisible){
+
+            foundBlock = true;
+
+        }
+
+    }
+
 }

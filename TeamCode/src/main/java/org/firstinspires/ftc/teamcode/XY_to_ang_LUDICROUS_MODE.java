@@ -713,7 +713,8 @@ public class XY_to_ang_LUDICROUS_MODE extends LinearOpMode {
             if (angleError > 0) {
                 rot = -0.7;
             } else {
-                rot = 0.7;
+                rot = 0.7
+                ;
             }
 
             leftMotor.setPower(-(rot));

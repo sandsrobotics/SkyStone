@@ -20,6 +20,7 @@ public class teleop extends LinearOpMode {
     private DcMotor motor2;
     private RevBlinkinLedDriver blinkin;
     private DcMotor motor3;
+    private DcMotor park_assist;
 
     //my variables
 
@@ -36,19 +37,7 @@ public class teleop extends LinearOpMode {
     int offset = 0;
     boolean int_done = true;
 
-    /**
-     * Describe this function...
-     */
-    private void foundation_grabber() {
-        if (gamepad1.dpad_down) {
-            servo_position = 0;
-            motor_power_factor = 1;
-        } else if (gamepad1.dpad_up) {
-            servo_position = 1;
-        }
-        servo0.setPosition(servo_position);
-        servo1.setPosition(servo_position);
-    }
+
 
     /**
      * This function is executed when this Op Mode is selected from the Driver Station.
@@ -64,6 +53,7 @@ public class teleop extends LinearOpMode {
         motor2 = hardwareMap.dcMotor.get("motor2");
         blinkin = hardwareMap.get(RevBlinkinLedDriver.class, "blinkin");
         motor3 = hardwareMap.dcMotor.get("motor3");
+        park_assist = hardwareMap.dcMotor.get("motor3B");
 
         if (digital0.getState()) {
             int_done = true;
@@ -77,7 +67,7 @@ public class teleop extends LinearOpMode {
                 lancher_position();
                 slow_mode();
                 drive_robot();
-                foundation_grabber();
+                foundation_grabber(.5);
                 launcher_drive();
                 data_out();
                 Pickingupblockled();
@@ -89,6 +79,35 @@ public class teleop extends LinearOpMode {
                 Stationaryled();
             }
         }
+    }
+
+    /**
+     * Describe this function...
+     */
+
+    private void foundation_grabber(double speed) {
+        if (gamepad1.dpad_down) {
+            servo_position = 0;
+            motor_power_factor = 1;
+        } else if (gamepad1.dpad_up) {
+            servo_position = 1;
+        } else if (gamepad1.dpad_right){
+
+            park_assist.setPower(speed);
+
+        } else if (gamepad1.dpad_left){
+
+            park_assist.setPower(-speed);
+
+        }else{
+
+            park_assist.setPower(0);
+
+        }
+
+        servo0.setPosition(servo_position);
+        servo1.setPosition(servo_position);
+
     }
 
     /**
@@ -178,6 +197,7 @@ public class teleop extends LinearOpMode {
         motor0B.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         motor0B.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         motor0B.setDirection(DcMotorSimple.Direction.REVERSE);
+        park_assist.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         servo0.setDirection(Servo.Direction.REVERSE);
         servo0.setPosition(1);
         servo1.setPosition(1);

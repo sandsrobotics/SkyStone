@@ -96,8 +96,8 @@ public class rotation extends LinearOpMode {
     double xPos;
     double yPos;
     double zPos;
-
-    int skyPosTest = findPos(findAng());
+    double power;
+    double timesRun = 0;
 
     boolean debug = true;
 
@@ -268,6 +268,15 @@ public class rotation extends LinearOpMode {
 
         leftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         rightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+//
+        leftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+        leftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+//        leftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+  //      rightMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
         parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
@@ -279,7 +288,6 @@ public class rotation extends LinearOpMode {
 
         imu = hardwareMap.get(BNO055IMU.class, "imu");
         imu.initialize(parameters);
-        composeTelemetry();
         telemetry.update();
 
         waitForStart();
@@ -306,6 +314,7 @@ public class rotation extends LinearOpMode {
             yPos = position.y;
             zPos = position.z;
 
+
             telemetry.addData("Xpos", zPos);
             telemetry.addData("Ypos", yPos);
             telemetry.addData("Zpos", xPos);
@@ -313,10 +322,8 @@ public class rotation extends LinearOpMode {
             telemetry.addData("LeftMotor", rightMotor.getPower());
             telemetry.addData("This is E", angleError);
             telemetry.addData("This is target", target);
+            telemetry.addData("current heading", getHeading());
             telemetry.update();
-
-
-
 
             if (debug == true) {
                 if (gamepad1.b) {
@@ -327,90 +334,16 @@ public class rotation extends LinearOpMode {
                 }
                 else if(gamepad1.a) {
 
-                    crazyRotation(90,.5,.2);
+                    //crazyRotation(90,.5,.2);
+                    MoveToAngleWithFakePID(90,.25,100,.05 , 2);
 
                 }
                 else {
-                    leftMotor.setPower(0);
-                    rightMotor.setPower(0);
+                    //leftMotor.setPower(0);
+                    //rightMotor.setPower(0);
                 }
             }
         }
-    }
-
-    void composeTelemetry() {
-
-        // At the beginning of each telemetry update, grab a bunch of data
-        // from the IMU that we will then display in separate lines.
-        telemetry.addAction(new Runnable() {
-            @Override
-            public void run() {
-                // Acquiring the angles is relatively expensive; we don't want
-                // to do that in each of the three items that need that info, as that's
-                // three times the necessary expense.
-                angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
-                gravity = imu.getGravity();
-            }
-        });
-
-        telemetry.addLine()
-                .addData("status", new Func<String>() {
-                    @Override
-                    public String value() {
-                        return imu.getSystemStatus().toShortString();
-                    }
-                })
-                .addData("calib", new Func<String>() {
-                    @Override
-                    public String value() {
-                        return imu.getCalibrationStatus().toString();
-                    }
-                });
-
-        telemetry.addLine()
-                .addData("heading", new Func<String>() {
-                    @Override
-                    public String value() {
-                        return formatAngle(angles.angleUnit, angles.firstAngle);
-                    }
-                })
-                .addData("roll", new Func<String>() {
-                    @Override
-                    public String value() {
-                        return formatAngle(angles.angleUnit, angles.secondAngle);
-                    }
-                })
-                .addData("pitch", new Func<String>() {
-                    @Override
-                    public String value() {
-                        return formatAngle(angles.angleUnit, angles.thirdAngle);
-                    }
-                });
-
-        telemetry.addLine()
-                .addData("grvty", new Func<String>() {
-                    @Override
-                    public String value() {
-                        return gravity.toString();
-                    }
-                })
-                .addData("mag", new Func<String>() {
-                    @Override
-                    public String value() {
-                        return String.format(Locale.getDefault(), "%.3f",
-                                Math.sqrt(gravity.xAccel * gravity.xAccel +
-                                        gravity.yAccel * gravity.yAccel +
-                                        gravity.zAccel * gravity.zAccel));
-                    }
-                });
-    }
-
-    String formatAngle(AngleUnit angleUnit, double angle) {
-        return formatDegrees(AngleUnit.DEGREES.fromUnit(angleUnit, angle));
-    }
-
-    String formatDegrees(double degrees) {
-        return String.format(Locale.getDefault(), "%.1f", AngleUnit.DEGREES.normalize(degrees));
     }
 
     void moveToAng(double target, double tolerance) {
@@ -456,86 +389,7 @@ public class rotation extends LinearOpMode {
             }
         }
     }
-
-    double findAng() {
-
-        //find ang stuff
-        double goalAng = 361;
-
-        // check all the trackable targets to see which one (if any) is visible.
-        targetVisible = false;
-        for (VuforiaTrackable trackable : allTrackables) {
-            if (((VuforiaTrackableDefaultListener) trackable.getListener()).isVisible()) {
-                telemetry.addData("Visible Target", trackable.getName());
-                targetVisible = true;
-
-                // getUpdatedRobotLocation() will return null if no new information is available since
-                // the last time that call was made, or if the trackable is not currently visible.
-                OpenGLMatrix robotLocationTransform = ((VuforiaTrackableDefaultListener) trackable.getListener()).getUpdatedRobotLocation();
-                if (robotLocationTransform != null) {
-                    lastLocation = robotLocationTransform;
-                }
-                break;
-            }
-        }
-
-        // Provide feedback as to where the robot is located (if we know).
-        if (targetVisible) {
-            // express position (translation) of robot in inches.
-            VectorF translation = lastLocation.getTranslation();
-            telemetry.addData("Pos (in)", "{X, Y, Z} = %.1f, %.1f, %.1f",
-                    translation.get(0) / mmPerInch, translation.get(1) / mmPerInch, translation.get(2) / mmPerInch);
-
-            // express the rotation of the robot in degrees.
-            Orientation rotation = Orientation.getOrientation(lastLocation, EXTRINSIC, XYZ, DEGREES);
-            telemetry.addData("Rot (deg)", "{Roll, Pitch, Heading} = %.0f, %.0f, %.0f", rotation.firstAngle, rotation.secondAngle, rotation.thirdAngle);
-            goalAng = rotation.thirdAngle;
-        } else {
-            telemetry.addData("Visible Target", "none");
-            goalAng = 361;
-        }
-        telemetry.update();
-        return (goalAng);
-    }
-
-    int findPos(double goalAng) {
-        if (goalAng == 361) {
-            return (1);
-        } else if (goalAng < 0) {
-            return (2);
-        } else {
-            return (3);
-        }
-    }
-
-    void pointToSky() {
-
-        double Pk = 5;
-
-        telemetry.update();
-        double heading = angles.firstAngle;
-        double target = findAng();
-        double angleError = target + heading;
-
-        while ((angleError > .5) || (angleError < -0.5)) {
-            telemetry.update();
-            heading = angles.firstAngle;
-            //target = findAng();
-            angleError = target + heading;
-
-            if (angleError > 180) {
-                angleError = angleError - 360;
-            } else if (angleError < -180) {
-                angleError = angleError + 360;
-            }
-
-            rot = (Pk * angleError / 180); //   + (Dk * (angleError - lastError) / 180 )
-            leftMotor.setPower(-(rot));
-            rightMotor.setPower(rot);
-            lastError = angleError;
-        }
-    }
-
+/*
     void crazyRotation(double dgreezz, double tolerancess, double speed) {
 
         hedding = getHeading();
@@ -576,12 +430,76 @@ public class rotation extends LinearOpMode {
         }
     }
 
+ */
+
     double getHeading(){
 
         Orientation angles;
         angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
         return angles.firstAngle;
 
+
+    }
+
+    double findError(double target1){
+
+        double hedding1 = getHeading();
+
+        double angleError1 = target1 - hedding1;
+        if (angleError1 > 180) {
+            angleError1 = angleError1 - 360;
+        } else if (angleError1 < -180) {
+            angleError1 = angleError1 + 360;
+        }
+
+        return angleError1;
+
+    }
+
+    void MoveToAngleWithFakePID (double target, double tolerance , double divitionFactor, double minPower, double minBreakSpeed){
+
+        double currentError = findError(target);
+        double lastError = currentError;
+
+        while(Math.abs(currentError) > tolerance && Math.abs(currentError - lastError) < minBreakSpeed && opModeIsActive()){
+
+            //power = (findError(target) / divitionFactor);
+
+            lastError = currentError;
+
+
+            if (currentError > 0){
+
+                power = minPower;
+
+            }else{
+
+                power = -minPower;
+
+            }
+
+            leftMotor.setPower(-power);
+            rightMotor.setPower(power);
+
+            if(gamepad1.back){
+
+                break;
+
+            }
+
+            telemetry.addData("current heading", getHeading());
+            telemetry.addData("angleError", currentError);
+            telemetry.addData("time loop run", timesRun ++);
+            telemetry.addData("min power", minPower);
+            telemetry.addData("RightMotor", leftMotor.getPower());
+            telemetry.addData("LeftMotor", rightMotor.getPower());
+            telemetry.update();
+
+            currentError = findError(target);
+        }
+
+        leftMotor.setPower(0);
+        rightMotor.setPower(0);
 
     }
 

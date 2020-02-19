@@ -8,7 +8,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.Servo;
 
-@TeleOp(name = "Bala_v8_122319 (Blocks to Java)", group = "")
+@TeleOp(name = "teleop v9", group = "")
 public class teleop extends LinearOpMode {
 
     private Servo servo0;
@@ -27,7 +27,7 @@ public class teleop extends LinearOpMode {
     int launcherPos = 0;
     boolean xdone = false;
     int all_the_way_down = -1050;
-    int my_90_degrees = -900;
+    int my_90_degrees = -850;
     int straight_up = -420;
     double servo_position = 1;
     boolean x_press___x_done_0 = false;

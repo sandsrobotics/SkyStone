@@ -101,10 +101,10 @@ public class StrightLine extends LinearOpMode {
     double timesRun = 0;
     double leftMotorLastPos = 0;
     // eqauation = pulses per rev / (wheel diamiter * pi)
-    int encoderPerInch = (int) Math.round(383.6 /(4 * 3.14));
+    double encoderPerInch = 383.6 /(4 * 3.14);
 
     boolean debug = true;
-   // boolean run = false;
+    boolean run = false;
 
     BNO055IMU imu;
     Orientation angles;
@@ -345,8 +345,20 @@ public class StrightLine extends LinearOpMode {
                 }
                 else if(gamepad1.x) {
                     //MoveToAngleWithFakePID(90,.25,180,.04 , 2.5);
-                    moveWithRamp(48 ,0 ,.1 ,.5 ,.01 ,20 );
+                    moveWithRamp(100 ,0 ,.1 ,.9 ,.03 ,.02 );
                     //run = true;
+                }else if (gamepad1.y){
+
+                    moveWithRamp(-100 ,0 ,.1 ,.9 ,.03 ,.02 );
+
+                }
+            }
+            else {
+                if (!run){
+
+                    MoveToAngleWithFakePID(90,1,100,.05 , 2.5);
+                    run = true;
+
                 }
             }
         }
@@ -522,31 +534,52 @@ public class StrightLine extends LinearOpMode {
         rightMotor.setPower(0);
 
     }
-    void moveWithRamp(int distance, double heading, double minPower, double maxPower, double rampUpFactor,double rampDownFactor){
+    void moveWithRamp(double distance, double heading, double minPower, double maxPower, double rampUpFactor,double rampDownFactor){
         boolean rampUpDone = false;
         double power = 0;
-        double error = 0;
-        int encoderTicks = distance * encoderPerInch;
-        double power2 = ((encoderTicks + leftMotorLastPos) - leftMotor.getCurrentPosition()) / (rampDownFactor * 100);
+        double error;
+        double encoderTicks = distance * encoderPerInch;
+        leftMotorLastPos = leftMotor.getCurrentPosition();
+        double distanceLeft;
+        if(distance > 0) {
 
-        leftMotor.setTargetPosition(encoderTicks + leftMotor.getCurrentPosition());
-        rightMotor.setTargetPosition(encoderTicks + rightMotor.getCurrentPosition() );
+            distanceLeft = (encoderTicks + leftMotorLastPos) - leftMotor.getCurrentPosition();
+
+        }else {
+
+            distanceLeft = -((encoderTicks + leftMotorLastPos) - leftMotor.getCurrentPosition());
+
+        }
+
+        leftMotor.setTargetPosition((int) encoderTicks + leftMotor.getCurrentPosition());
+        rightMotor.setTargetPosition((int) encoderTicks + rightMotor.getCurrentPosition() );
 
         leftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         rightMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
-        while(leftMotor.isBusy()|| rightMotor.isBusy() && opModeIsActive()){
+
+
+        while(leftMotor.isBusy()&& rightMotor.isBusy() && opModeIsActive()){
 
             if(!rampUpDone){
 
-                while(power < maxPower && power < power2 && opModeIsActive()){
+                while(power < maxPower && encoderTicks * .5 < distanceLeft && opModeIsActive()){
 
                     power += rampUpFactor;
                     power = Math.min(power , maxPower);
-                    error = findError(heading) / 100;
-                    leftMotor.setPower(power - error);
-                    rightMotor.setPower(power + error);
-                    power2 = ((encoderTicks + leftMotorLastPos)- leftMotor.getCurrentPosition()) / (rampDownFactor * 100);
+                    error = findError(heading) / 120;
+                    if(distance > 0) {
+
+                        leftMotor.setPower((power - error));
+                        rightMotor.setPower(power + error);
+
+                    }else{
+
+                        leftMotor.setPower(power + error);
+                        rightMotor.setPower(power - error);
+
+                    }
+                    distanceLeft = ((encoderTicks + leftMotorLastPos)- leftMotor.getCurrentPosition());
                     telemetry.addData("leftMotor", leftMotor.getPower());
                     telemetry.addData("rightMotor", rightMotor.getPower());
                     telemetry.addData("runing rampup:","true");
@@ -557,12 +590,64 @@ public class StrightLine extends LinearOpMode {
 
             }else{
 
-                power = ((encoderTicks + leftMotorLastPos) - leftMotor.getCurrentPosition()) / (rampDownFactor * 100);
-                power = Math.min(power, maxPower);
-                power = Math.max(minPower, power);
-                error = findError(heading) / 100;
-                leftMotor.setPower(power - error);
-                rightMotor.setPower(power + error);
+                if(distance > 0) {
+
+                    distanceLeft = (encoderTicks + leftMotorLastPos) - leftMotor.getCurrentPosition();
+
+                }else {
+
+                    distanceLeft = -((encoderTicks + leftMotorLastPos) - leftMotor.getCurrentPosition());
+
+                }
+
+                if(encoderTicks * .5 > distanceLeft) {
+
+                    power -= rampDownFactor;
+
+                }
+
+                power = Math.max(power, minPower);
+
+                error = findError(heading) / 120;
+
+                if(distance > 0) {
+
+                    leftMotor.setPower((power - error));
+                    rightMotor.setPower(power + error);
+
+                }else{
+
+                    leftMotor.setPower(power + error);
+                    rightMotor.setPower(power - error);
+
+                }
+
+            }
+                /*
+                if(distance > 0) {
+
+                    power = ((encoderTicks + leftMotorLastPos) - leftMotor.getCurrentPosition()) / (rampDownFactor * 100);
+
+                }else {
+
+                    power = -((encoderTicks + leftMotorLastPos) - leftMotor.getCurrentPosition()) / (rampDownFactor * 100);
+
+                }
+                    power = Math.min(power, maxPower);
+                    power = Math.max(minPower, power);
+
+                error = findError(heading) / 120;
+                if(distance > 0) {
+
+                    leftMotor.setPower((power - error));
+                    rightMotor.setPower(power + error);
+
+                }else{
+
+                    leftMotor.setPower(power + error);
+                    rightMotor.setPower(power - error);
+
+                }
                 telemetry.addData("leftMotor", leftMotor.getPower());
                 telemetry.addData("rightMotor", rightMotor.getPower());
                 telemetry.addData("power", power);
@@ -570,6 +655,8 @@ public class StrightLine extends LinearOpMode {
                 telemetry.update();
 
             }
+
+                 */
         }
 
         leftMotor.setPower(0);

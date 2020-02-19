@@ -1,3 +1,6 @@
+////////////////////////
+// date : feb 18 2020//
+///////////////////////
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
@@ -345,11 +348,11 @@ public class StrightLine extends LinearOpMode {
                 }
                 else if(gamepad1.x) {
                     //MoveToAngleWithFakePID(90,.25,180,.04 , 2.5);
-                    moveWithRamp(100 ,0 ,.1 ,.9 ,.03 ,.02 );
+                    moveWithRamp(100 ,0 ,.1 ,.7 ,.03 ,.05, .5);
                     //run = true;
                 }else if (gamepad1.y){
 
-                    moveWithRamp(-100 ,0 ,.1 ,.9 ,.03 ,.02 );
+                    moveWithRamp(-100 ,0 ,.1 ,.7 ,.03 ,.05, .5);
 
                 }
             }
@@ -524,8 +527,8 @@ public class StrightLine extends LinearOpMode {
             telemetry.addData("inRange", inRange);
             telemetry.addData("time loop run", timesRun ++);
             telemetry.addData("min power", minPower);
-            telemetry.addData("leftMotor", leftMotor.getPower());
-            telemetry.addData("rightMotor", rightMotor.getPower());
+            // telemetry.addData("leftMotor", leftMotor.getPower());
+            // telemetry.addData("rightMotor", rightMotor.getPower());
             telemetry.update();
 
         }
@@ -534,22 +537,22 @@ public class StrightLine extends LinearOpMode {
         rightMotor.setPower(0);
 
     }
-    void moveWithRamp(double distance, double heading, double minPower, double maxPower, double rampUpFactor,double rampDownFactor){
+    void moveWithRamp(double distance, double heading, double minPower, double maxPower, double rampUpFactor,double rampDownFactor, double rampDownPersent){
         boolean rampUpDone = false;
         double power = 0;
         double error;
         double encoderTicks = distance * encoderPerInch;
         leftMotorLastPos = leftMotor.getCurrentPosition();
         double distanceLeft;
-        if(distance > 0) {
+        //if(distance > 0) {
 
-            distanceLeft = (encoderTicks + leftMotorLastPos) - leftMotor.getCurrentPosition();
+        distanceLeft = (encoderTicks + leftMotorLastPos) - leftMotor.getCurrentPosition();
 
-        }else {
+        // }else {
 
-            distanceLeft = -((encoderTicks + leftMotorLastPos) - leftMotor.getCurrentPosition());
+        //   distanceLeft = -((encoderTicks + leftMotorLastPos) - leftMotor.getCurrentPosition());
 
-        }
+        //}
 
         leftMotor.setTargetPosition((int) encoderTicks + leftMotor.getCurrentPosition());
         rightMotor.setTargetPosition((int) encoderTicks + rightMotor.getCurrentPosition() );
@@ -563,7 +566,7 @@ public class StrightLine extends LinearOpMode {
 
             if(!rampUpDone){
 
-                while(power < maxPower && encoderTicks * .5 < distanceLeft && opModeIsActive()){
+                while( (power < maxPower) && ((encoderTicks * rampDownPersent) < distanceLeft) && opModeIsActive()){
 
                     power += rampUpFactor;
                     power = Math.min(power , maxPower);
@@ -579,9 +582,19 @@ public class StrightLine extends LinearOpMode {
                         rightMotor.setPower(power - error);
 
                     }
-                    distanceLeft = ((encoderTicks + leftMotorLastPos)- leftMotor.getCurrentPosition());
+                    //if(distance > 0) {
+
+                    distanceLeft = (encoderTicks + leftMotorLastPos) - leftMotor.getCurrentPosition();
+
+                    // }else {
+
+                    // distanceLeft = -((encoderTicks + leftMotorLastPos) - leftMotor.getCurrentPosition());
+
+                    // }
                     telemetry.addData("leftMotor", leftMotor.getPower());
                     telemetry.addData("rightMotor", rightMotor.getPower());
+                    telemetry.addData("encoder ticks:",encoderTicks);
+                    telemetry.addData("distance left",distanceLeft);
                     telemetry.addData("runing rampup:","true");
                     telemetry.update();
                 }
@@ -600,7 +613,7 @@ public class StrightLine extends LinearOpMode {
 
                 }
 
-                if(encoderTicks * .5 > distanceLeft) {
+                if(encoderTicks * rampDownPersent > distanceLeft) {
 
                     power -= rampDownFactor;
 
@@ -621,6 +634,12 @@ public class StrightLine extends LinearOpMode {
                     rightMotor.setPower(power - error);
 
                 }
+
+                telemetry.addData("leftMotor", leftMotor.getPower());
+                telemetry.addData("rightMotor", rightMotor.getPower());
+                telemetry.addData("power", power);
+                telemetry.addData("runing rampdown:","true");
+                telemetry.update();
 
             }
                 /*

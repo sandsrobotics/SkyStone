@@ -1,3 +1,9 @@
+//////////////////
+//go straight : //
+// date: feb 20 2020//
+//////////////////////
+
+
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
@@ -39,11 +45,13 @@ import static org.firstinspires.ftc.robotcore.external.navigation.AxesOrder.YZX;
 import static org.firstinspires.ftc.robotcore.external.navigation.AxesReference.EXTRINSIC;
 import static org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer.CameraDirection.BACK;
 
+
+
 // Vuforia
 
 @TeleOp
 
-public class NewMeRoboRio extends LinearOpMode {
+public class StaightLine1 extends LinearOpMode {
 
     private static final VuforiaLocalizer.CameraDirection CAMERA_CHOICE = BACK;
     private static final boolean PHONE_IS_PORTRAIT = false;
@@ -102,8 +110,6 @@ public class NewMeRoboRio extends LinearOpMode {
     double leftMotorLastPos = 0;
     // eqauation = pulses per rev / (wheel diamiter * pi)
     double encoderPerInch = 383.6 /(4 * 3.14);
-    double servo0Pos = .5;
-    double servo1Pos = .5;
 
     boolean debug = true;
     boolean run = false;
@@ -125,9 +131,6 @@ public class NewMeRoboRio extends LinearOpMode {
     private DcMotor motor1;
     private DcMotor motor0B;
     private DcMotor liftMotor;
-    private Servo Hand;
-    private Servo Elbow;
-
 
     @Override
     public void runOpMode() {
@@ -140,8 +143,6 @@ public class NewMeRoboRio extends LinearOpMode {
         motor3 = hardwareMap.dcMotor.get("motor3");
         servo0 = hardwareMap.servo.get("servo0"); // test
         servo1 = hardwareMap.servo.get("servo1");
-        Hand = hardwareMap.servo.get("servo0B"); // test
-        Elbow = hardwareMap.servo.get("servo1B");
         blinkin = hardwareMap.get(RevBlinkinLedDriver.class, "blinkin");
         sensorDistance = hardwareMap.get(DistanceSensor.class, "sensor_color_distance");
 
@@ -335,54 +336,37 @@ public class NewMeRoboRio extends LinearOpMode {
             telemetry.addData("This is E", angleError);
             telemetry.addData("This is target", target);
             telemetry.addData("current heading", getHeading());
-            telemetry.addData("arm Pos ",servo0Pos);
-            telemetry.addData("elbow Pos ",servo1Pos);
-            telemetry.addData("arm real Pos ",Hand.getPosition());
-            telemetry.addData("elbow real Pos ",Elbow.getPosition());
             telemetry.addData("version " , "4.5");
             telemetry.update();
 
             if (debug == true) {
-                if (gamepad1.y) {
+                if (gamepad1.b) {
 
-                    if(servo0Pos < 1) {
-
-                        servo0Pos += 0.01;
-                        Hand.setPosition(servo0Pos);
-
-                    }
+                    MoveToAngleWithFakePID(90,1,100,.05 , 2.5);
 
                 }
                 else if(gamepad1.a) {
 
-                    if(servo0Pos > 0) {
-
-                        servo0Pos -= 0.01;
-                        Hand.setPosition(servo0Pos);
-
-                    }
+                    MoveToAngleWithFakePID(90,.5,180,.03 , 2.5);
 
                 }
                 else if(gamepad1.x) {
+                    //moveByEncoderNOPID(1000);
+                    moveWithRamp(100 ,0 ,.1 ,.8 ,.03 ,.04, .6);
 
-                    if(servo1Pos < 1) {
-                        servo1Pos += 0.01;
-                        Elbow.setPosition(servo1Pos);
+                }else if (gamepad1.y){
 
-                    }
-
-                }
-                else if (gamepad1.b){
-
-                    if(servo1Pos > 0) {
-                        servo1Pos -= 0.01;
-                        Elbow.setPosition(servo1Pos);
-                    }
+                    moveWithRamp(-100 ,0 ,.1 ,.8 ,.03 ,.04, .6);
 
                 }
+            }
+            else {
+                if (!run){
 
-                leftMotor.setPower(gamepad1.left_stick_y);
-                rightMotor.setPower(gamepad1.right_stick_y);
+                    MoveToAngleWithFakePID(90,1,100,.05 , 2.5);
+                    run = true;
+
+                }
             }
         }
     }
@@ -432,30 +416,45 @@ public class NewMeRoboRio extends LinearOpMode {
     }
 /*
     void crazyRotation(double dgreezz, double tolerancess, double speed) {
+
         hedding = getHeading();
         //if you want it to reset every time
         //dgreezz += angles.firstAngle;
+
         if(hedding < dgreezz - tolerancess){
             while(hedding < dgreezz - tolerancess) {
+
+
+
                 leftMotor.setPower(-speed);
                 rightMotor.setPower(speed);
+
                 if(gamepad1.back){
+
                     break;
+
                 }
                 hedding = getHeading();
             }
         }
         else if (hedding > dgreezz + tolerancess){
             while(hedding > dgreezz + tolerancess) {
+
+
+
                 leftMotor.setPower(speed);
                 rightMotor.setPower(-speed);
+
                 if(gamepad1.back){
+
                     break;
+
                 }
                 hedding = getHeading();
             }
         }
     }
+
  */
 
     double getHeading(){
@@ -532,8 +531,8 @@ public class NewMeRoboRio extends LinearOpMode {
             telemetry.addData("inRange", inRange);
             telemetry.addData("time loop run", timesRun ++);
             telemetry.addData("min power", minPower);
-            telemetry.addData("leftMotor", leftMotor.getPower());
-            telemetry.addData("rightMotor", rightMotor.getPower());
+            // telemetry.addData("leftMotor", leftMotor.getPower());
+            // telemetry.addData("rightMotor", rightMotor.getPower());
             telemetry.update();
 
         }
@@ -542,22 +541,15 @@ public class NewMeRoboRio extends LinearOpMode {
         rightMotor.setPower(0);
 
     }
-    void moveWithRamp(double distance, double heading, double minPower, double maxPower, double rampUpFactor,double rampDownFactor){
-        boolean rampUpDone = false;
+    void moveWithRamp(double distance, double heading, double minPower, double maxPower, double rampUpFactor,double rampDownFactor, double rampDownPersent){
+
         double power = 0;
         double error;
         double encoderTicks = distance * encoderPerInch;
         leftMotorLastPos = leftMotor.getCurrentPosition();
         double distanceLeft;
-        if(distance > 0) {
 
-            distanceLeft = (encoderTicks + leftMotorLastPos) - leftMotor.getCurrentPosition();
-
-        }else {
-
-            distanceLeft = -((encoderTicks + leftMotorLastPos) - leftMotor.getCurrentPosition());
-
-        }
+        distanceLeft = (encoderTicks + leftMotorLastPos) - leftMotor.getCurrentPosition();
 
         leftMotor.setTargetPosition((int) encoderTicks + leftMotor.getCurrentPosition());
         rightMotor.setTargetPosition((int) encoderTicks + rightMotor.getCurrentPosition() );
@@ -566,98 +558,65 @@ public class NewMeRoboRio extends LinearOpMode {
         rightMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
 
-
         while(leftMotor.isBusy()&& rightMotor.isBusy() && opModeIsActive()){
 
-            if(!rampUpDone){
+            distanceLeft = (encoderTicks + leftMotorLastPos) - leftMotor.getCurrentPosition();
 
-                while(power < maxPower && encoderTicks * .5 < distanceLeft && opModeIsActive()){
+            if((power < maxPower) && (Math.abs(distanceLeft) > (Math.abs(encoderTicks) * rampDownPersent))){
 
-                    power += rampUpFactor;
-                    power = Math.min(power , maxPower);
-                    error = findError(heading) / 120;
-                    if(distance > 0) {
+                power += rampUpFactor;
+                power = Math.min(power, maxPower);
 
-                        leftMotor.setPower((power - error));
-                        rightMotor.setPower(power + error);
+            }
+            else if ((power > minPower) && (Math.abs(distanceLeft) < (Math.abs(encoderTicks) * rampDownPersent))){
 
-                    }else{
+                power -= rampDownFactor;
+                power = Math.max(power, minPower);
 
-                        leftMotor.setPower(power + error);
-                        rightMotor.setPower(power - error);
+            }
+            if(distance > 0){
 
-                    }
-                    distanceLeft = ((encoderTicks + leftMotorLastPos)- leftMotor.getCurrentPosition());
-                    telemetry.addData("leftMotor", leftMotor.getPower());
-                    telemetry.addData("rightMotor", rightMotor.getPower());
-                    telemetry.addData("runing rampup:","true");
-                    telemetry.update();
-                }
-
-                rampUpDone = true;
+                error = findError(heading) / 70;
 
             }else{
 
-                if(distance > 0) {
-
-                    distanceLeft = (encoderTicks + leftMotorLastPos) - leftMotor.getCurrentPosition();
-
-                }else {
-
-                    distanceLeft = -((encoderTicks + leftMotorLastPos) - leftMotor.getCurrentPosition());
-
-                }
-
-                if(encoderTicks * .5 > distanceLeft) {
-
-                    power -= rampDownFactor;
-
-                }
-
-                power = Math.max(power, minPower);
-
-                error = findError(heading) / 120;
-
-                if(distance > 0) {
-
-                    leftMotor.setPower((power - error));
-                    rightMotor.setPower(power + error);
-
-                }else{
-
-                    leftMotor.setPower(power + error);
-                    rightMotor.setPower(power - error);
-
-                }
+                error = -(findError(heading) / 70);
 
             }
-                /*
-                if(distance > 0) {
-                    power = ((encoderTicks + leftMotorLastPos) - leftMotor.getCurrentPosition()) / (rampDownFactor * 100);
-                }else {
-                    power = -((encoderTicks + leftMotorLastPos) - leftMotor.getCurrentPosition()) / (rampDownFactor * 100);
-                }
-                    power = Math.min(power, maxPower);
-                    power = Math.max(minPower, power);
-                error = findError(heading) / 120;
-                if(distance > 0) {
-                    leftMotor.setPower((power - error));
-                    rightMotor.setPower(power + error);
-                }else{
-                    leftMotor.setPower(power + error);
-                    rightMotor.setPower(power - error);
-                }
-                telemetry.addData("leftMotor", leftMotor.getPower());
-                telemetry.addData("rightMotor", rightMotor.getPower());
-                telemetry.addData("power", power);
-                telemetry.addData("runing rampdown:","true");
-                telemetry.update();
-            }
-                 */
+
+            //leftMotor.setPower(power - error);
+            //rightMotor.setPower(power + error);
+
+            leftMotor.setPower(power);
+            rightMotor.setPower(power);
+
         }
 
         leftMotor.setPower(0);
         rightMotor.setPower(0);
         leftMotorLastPos = leftMotor.getCurrentPosition();
+    }
+
+    void moveByEncoderNOPID(int EncoderMovement) {
+
+        rightMotor.setTargetPosition(rightMotor.getCurrentPosition() + EncoderMovement);
+        leftMotor.setTargetPosition(leftMotor.getCurrentPosition() + EncoderMovement);
+
+        rightMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        leftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        leftMotor.setPower(0.2);
+        rightMotor.setPower(0.2);
+
+        sleep(2000);
+
+        while(leftMotor.isBusy() && rightMotor.isBusy()) {
+            telemetry.addData("Right", rightMotor.isBusy());
+            telemetry.addData("Left", leftMotor.isBusy());
+            telemetry.update();
+        }
+
+        leftMotor.setPower(0);
+        rightMotor.setPower(0);
     }
 }// end of class

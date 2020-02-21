@@ -1,3 +1,8 @@
+//////////////////////
+//Date: feb 15, 2020//
+//tested rotation: //
+//works with overshoot//
+////////////////////////
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
@@ -42,7 +47,7 @@ import static org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocaliz
 
 @TeleOp
 
-public class rotation extends LinearOpMode {
+public class Rotation2 extends LinearOpMode {
 
     private static final VuforiaLocalizer.CameraDirection CAMERA_CHOICE = BACK;
     private static final boolean PHONE_IS_PORTRAIT = false;
@@ -276,7 +281,7 @@ public class rotation extends LinearOpMode {
         rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
 //        leftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-  //      rightMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        //      rightMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
         parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
@@ -323,19 +328,19 @@ public class rotation extends LinearOpMode {
             telemetry.addData("This is E", angleError);
             telemetry.addData("This is target", target);
             telemetry.addData("current heading", getHeading());
+            telemetry.addData("version " , "4.3");
             telemetry.update();
 
             if (debug == true) {
                 if (gamepad1.b) {
-                    while (gamepad1.b) {
-                        moveToAng(90,10);
-                    }
+
+                    MoveToAngleWithFakePID(90,1,100,.05 , 2.5);
 
                 }
                 else if(gamepad1.a) {
 
                     //crazyRotation(90,.5,.2);
-                    MoveToAngleWithFakePID(90,.25,100,.05 , 2);
+                    MoveToAngleWithFakePID(90,.5,180,.03 , 2.5);
 
                 }
                 else {
@@ -458,24 +463,32 @@ public class rotation extends LinearOpMode {
 
     void MoveToAngleWithFakePID (double target, double tolerance , double divitionFactor, double minPower, double minBreakSpeed){
 
-        double currentError = findError(target);
-        double lastError = currentError;
+        double currentError;
+        int inRange = 0;
 
-        while(Math.abs(currentError) > tolerance && Math.abs(currentError - lastError) < minBreakSpeed && opModeIsActive()){
+        while(inRange <= 40 && opModeIsActive()){
 
-            //power = (findError(target) / divitionFactor);
+            currentError = findError(target);
 
-            lastError = currentError;
+            if (Math.abs(currentError) < tolerance){
 
-
-            if (currentError > 0){
-
-                power = minPower;
+                inRange ++;
+                power = 0;
 
             }else{
 
-                power = -minPower;
+                inRange = 0;
+                power = (findError(target) / divitionFactor);
 
+                if (currentError > 0){
+
+                    power += minPower;
+
+                }else{
+
+                    power -= minPower;
+
+                }
             }
 
             leftMotor.setPower(-power);
@@ -487,15 +500,15 @@ public class rotation extends LinearOpMode {
 
             }
 
-            telemetry.addData("current heading", getHeading());
+            //telemetry.addData("current heading", getHeading());
             telemetry.addData("angleError", currentError);
+            telemetry.addData("inRange", inRange);
             telemetry.addData("time loop run", timesRun ++);
             telemetry.addData("min power", minPower);
             telemetry.addData("RightMotor", leftMotor.getPower());
             telemetry.addData("LeftMotor", rightMotor.getPower());
             telemetry.update();
 
-            currentError = findError(target);
         }
 
         leftMotor.setPower(0);

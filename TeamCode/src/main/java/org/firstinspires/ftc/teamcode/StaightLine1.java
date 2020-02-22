@@ -331,8 +331,10 @@ public class StaightLine1 extends LinearOpMode {
             telemetry.addData("Xpos", zPos);
             telemetry.addData("Ypos", yPos);
             telemetry.addData("Zpos", xPos);
-            telemetry.addData("RightMotor", leftMotor.getPower());
-            telemetry.addData("LeftMotor", rightMotor.getPower());
+            telemetry.addData("RightMotor power", leftMotor.getPower());
+            telemetry.addData("LeftMotor power", rightMotor.getPower());
+            telemetry.addData("RightMotor pos", leftMotor.getCurrentPosition());
+            telemetry.addData("LeftMotor pos", rightMotor.getCurrentPosition());
             telemetry.addData("This is E", angleError);
             telemetry.addData("This is target", target);
             telemetry.addData("current heading", getHeading());
@@ -352,11 +354,11 @@ public class StaightLine1 extends LinearOpMode {
                 }
                 else if(gamepad1.x) {
                     //moveByEncoderNOPID(1000);
-                    moveWithRamp(100 ,0 ,.1 ,.8 ,.03 ,.04, .6);
+                    moveWithRamp(100 , getHeading() ,.1 ,.2 ,.03 ,.01, .4);
 
                 }else if (gamepad1.y){
 
-                    moveWithRamp(-100 ,0 ,.1 ,.8 ,.03 ,.04, .6);
+                    moveWithRamp(-100 ,getHeading() ,.1 ,.2 ,.03 ,.01, .4);
 
                 }
             }
@@ -543,13 +545,22 @@ public class StaightLine1 extends LinearOpMode {
     }
     void moveWithRamp(double distance, double heading, double minPower, double maxPower, double rampUpFactor,double rampDownFactor, double rampDownPersent){
 
-        double power = 0;
-        double error;
-        double encoderTicks = distance * encoderPerInch;
-        leftMotorLastPos = leftMotor.getCurrentPosition();
-        double distanceLeft;
+        rightMotor.setPower(0);
+        leftMotor.setPower(0);
 
-        distanceLeft = (encoderTicks + leftMotorLastPos) - leftMotor.getCurrentPosition();
+        leftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+
+        double power = 0;
+        double error = 0;
+        double encoderTicks = distance * encoderPerInch;
+       // leftMotorLastPos = leftMotor.getCurrentPosition();
+        double distanceLeft;
+        double distanceRight;
+
+        //distanceLeft = (encoderTicks + leftMotorLastPos) - leftMotor.getCurrentPosition();
+        distanceLeft = encoderTicks - leftMotor.getCurrentPosition();
 
         leftMotor.setTargetPosition((int) encoderTicks + leftMotor.getCurrentPosition());
         rightMotor.setTargetPosition((int) encoderTicks + rightMotor.getCurrentPosition() );
@@ -557,46 +568,53 @@ public class StaightLine1 extends LinearOpMode {
         leftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         rightMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
+        /*
+        while((leftMotor.isBusy() || rightMotor.isBusy()) && opModeIsActive()) {
 
-        while(leftMotor.isBusy()&& rightMotor.isBusy() && opModeIsActive()){
+            distanceLeft = encoderTicks - leftMotor.getCurrentPosition();
+            //distanceRight = encoderTicks - rightMotor.getCurrentPosition();
 
-            distanceLeft = (encoderTicks + leftMotorLastPos) - leftMotor.getCurrentPosition();
-
-            if((power < maxPower) && (Math.abs(distanceLeft) > (Math.abs(encoderTicks) * rampDownPersent))){
+            if (Math.abs(distanceLeft) > (Math.abs(encoderTicks) * rampDownPersent)) {
 
                 power += rampUpFactor;
                 power = Math.min(power, maxPower);
 
-            }
-            else if ((power > minPower) && (Math.abs(distanceLeft) < (Math.abs(encoderTicks) * rampDownPersent))){
+                if (distance > 0) {
+
+                    error = findError(heading) / 30;
+
+                } else {
+
+                    error = -(findError(heading) / 30);
+
+                }
+
+                error = 0;
+
+            } else if (Math.abs(distanceLeft) < (Math.abs(encoderTicks) * rampDownPersent)) {
 
                 power -= rampDownFactor;
                 power = Math.max(power, minPower);
 
-            }
-            if(distance > 0){
 
-                error = findError(heading) / 70;
-
-            }else{
-
-                error = -(findError(heading) / 70);
-
+                error = 0;
             }
 
-            //leftMotor.setPower(power - error);
-            //rightMotor.setPower(power + error);
-
-            leftMotor.setPower(power);
-            rightMotor.setPower(power);
+            rightMotor.setPower(power + error);
+            leftMotor.setPower(power - error);
 
         }
+*/
+        rightMotor.setPower(.3);
+        leftMotor.setPower(.3);
 
-        leftMotor.setPower(0);
+        while((leftMotor.isBusy() || rightMotor.isBusy()) && opModeIsActive()) {}
+
         rightMotor.setPower(0);
-        leftMotorLastPos = leftMotor.getCurrentPosition();
+        leftMotor.setPower(0);
     }
 
+    /*
     void moveByEncoderNOPID(int EncoderMovement) {
 
         rightMotor.setTargetPosition(rightMotor.getCurrentPosition() + EncoderMovement);
@@ -619,4 +637,7 @@ public class StaightLine1 extends LinearOpMode {
         leftMotor.setPower(0);
         rightMotor.setPower(0);
     }
+
+
+     */
 }// end of class

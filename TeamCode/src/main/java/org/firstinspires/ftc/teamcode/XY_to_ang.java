@@ -136,7 +136,6 @@ public class XY_to_ang extends LinearOpMode {
         rightMotor = hardwareMap.dcMotor.get("motor1");
         motor2 = hardwareMap.dcMotor.get("motor2");
         motor3 = hardwareMap.dcMotor.get("motor3");
-        sensorColorRange = hardwareMap.colorSensor.get("sensorColorRange");
         servo0 = hardwareMap.servo.get("servo0"); // test
         servo1 = hardwareMap.servo.get("servo1");
         blinkin = hardwareMap.get(RevBlinkinLedDriver.class, "blinkin");
@@ -344,7 +343,7 @@ public class XY_to_ang extends LinearOpMode {
 
             if (debug == true) {
                 if (gamepad1.a) {
-                    moveByEncoder(600);
+                    moveByEncoder(1000);
                 }
                 if (gamepad1.b) {
                     pointToSky();

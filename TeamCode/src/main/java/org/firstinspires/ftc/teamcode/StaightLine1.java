@@ -34,6 +34,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
+import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
+import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,6 +46,8 @@ import static org.firstinspires.ftc.robotcore.external.navigation.AxesOrder.XYZ;
 import static org.firstinspires.ftc.robotcore.external.navigation.AxesOrder.YZX;
 import static org.firstinspires.ftc.robotcore.external.navigation.AxesReference.EXTRINSIC;
 import static org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer.CameraDirection.BACK;
+import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
+import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
 
 
 
@@ -55,10 +59,14 @@ public class StaightLine1 extends LinearOpMode {
 
     private static final VuforiaLocalizer.CameraDirection CAMERA_CHOICE = BACK;
     private static final boolean PHONE_IS_PORTRAIT = false;
+    private static final String TFOD_MODEL_ASSET = "Skystone.tflite";
+    private static final String LABEL_FIRST_ELEMENT = "Stone";
+    private static final String LABEL_SECOND_ELEMENT = "Skystone";
 
     private static final String VUFORIA_KEY =
             "Ad6cSm3/////AAABmRkDMfGtWktbjulxwWmgzxl9TiuwUBtfA9n1VM546drOcSfM+JxvMxvI1WrLSLNdapOtOebE6n3BkjTjyj+sTXHoEyyJW/lPPmlX5Ar2AjeYpTW/WZM/lzG8qDPsm0tquhEj3BUisA5GRttyGXffPwfKJZNPy3WDqnPxyY/U2v+jQNfZjsWqNvUfp3a3klhVPYd25N5dliMihK3WogqNQnZM9bwJc1wRT0zcczYBJJrhpws9A5H2FpOZD6Ov7GqT+rJdKrU6bh+smoueINDFeaFuYQVMEeo7VOLgkzOeRDpfFmVOVeJrmUv+mwnxfFthAY5v90e4kgekG5OYzRQDS2ta0dbUpG6GoJMoZU2vASSa";
 
+    private TFObjectDetector tfod; //TensorFlow Object Detection engine.
     // We will define some constants and conversions here
     private static final float mmPerInch = 25.4f;
     private static final float mmTargetHeight = (6) * mmPerInch;          // the height of the center of the target image above the floor
@@ -349,16 +357,32 @@ public class StaightLine1 extends LinearOpMode {
                 }
                 else if(gamepad1.a) {
 
-                    MoveToAngleWithFakePID(90,.5,180,.03 , 2.5);
+                    MoveToAngleWithFakePID(90,.5,220,.05 , 2.5);
+
+                    List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
+
+                    if (updatedRecognitions != null) {
+                        telemetry.addData("# Object Detected", updatedRecognitions.size());
+                        // step through the list of recognitions and display boundary info.
+                        int i = 0;
+                        for (Recognition recognition : updatedRecognitions) {
+                            if(recognition.getLabel()=="Skystone") {
+
+                                angleError  =( ( (recognition.getLeft() + recognition.getRight())/2) - 350 ) / 20;
+
+                                telemetry.addData("Angleish",angleError);
+                            }
+                        }
+                    }
 
                 }
                 else if(gamepad1.x) {
                     //moveByEncoderNOPID(1000);
-                    moveWithRamp(100 , getHeading() ,.1 ,.2 ,.03 ,.01, .4);
+                    moveWithRamp(100 , 0 ,.1 ,.7,.03 ,.03, .5);
 
                 }else if (gamepad1.y){
 
-                    moveWithRamp(-100 ,getHeading() ,.1 ,.2 ,.03 ,.01, .4);
+                    moveWithRamp(-100 ,0 ,.1 ,.7 ,.03 ,.03, .5);
 
                 }
             }
@@ -494,7 +518,7 @@ public class StaightLine1 extends LinearOpMode {
 
         }
 
-        while(inRange <= 20 && outOfRange && opModeIsActive()){
+        while((inRange <= 20) && (outOfRange) && opModeIsActive()){
 
             currentError = findError(target);
 
@@ -548,6 +572,9 @@ public class StaightLine1 extends LinearOpMode {
         rightMotor.setPower(0);
         leftMotor.setPower(0);
 
+        leftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
         leftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
@@ -557,10 +584,6 @@ public class StaightLine1 extends LinearOpMode {
         double encoderTicks = distance * encoderPerInch;
        // leftMotorLastPos = leftMotor.getCurrentPosition();
         double distanceLeft;
-        double distanceRight;
-
-        //distanceLeft = (encoderTicks + leftMotorLastPos) - leftMotor.getCurrentPosition();
-        distanceLeft = encoderTicks - leftMotor.getCurrentPosition();
 
         leftMotor.setTargetPosition((int) encoderTicks + leftMotor.getCurrentPosition());
         rightMotor.setTargetPosition((int) encoderTicks + rightMotor.getCurrentPosition() );
@@ -568,76 +591,52 @@ public class StaightLine1 extends LinearOpMode {
         leftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         rightMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
-        /*
-        while((leftMotor.isBusy() || rightMotor.isBusy()) && opModeIsActive()) {
+
+        while((leftMotor.isBusy() && rightMotor.isBusy()) && opModeIsActive()) {
 
             distanceLeft = encoderTicks - leftMotor.getCurrentPosition();
-            //distanceRight = encoderTicks - rightMotor.getCurrentPosition();
 
             if (Math.abs(distanceLeft) > (Math.abs(encoderTicks) * rampDownPersent)) {
 
                 power += rampUpFactor;
                 power = Math.min(power, maxPower);
 
-                if (distance > 0) {
-
-                    error = findError(heading) / 30;
-
-                } else {
-
-                    error = -(findError(heading) / 30);
-
-                }
-
-                error = 0;
-
             } else if (Math.abs(distanceLeft) < (Math.abs(encoderTicks) * rampDownPersent)) {
 
                 power -= rampDownFactor;
                 power = Math.max(power, minPower);
 
-
-                error = 0;
             }
+
+            if (distance > 0) {
+
+                error = findError(heading) / 45;
+
+            } else {
+
+                error = -(findError(heading) / 45);
+
+            }
+
 
             rightMotor.setPower(power + error);
             leftMotor.setPower(power - error);
 
         }
-*/
-        rightMotor.setPower(.3);
-        leftMotor.setPower(.3);
 
-        while((leftMotor.isBusy() || rightMotor.isBusy()) && opModeIsActive()) {}
 
         rightMotor.setPower(0);
         leftMotor.setPower(0);
+
     }
 
-    /*
-    void moveByEncoderNOPID(int EncoderMovement) {
-
-        rightMotor.setTargetPosition(rightMotor.getCurrentPosition() + EncoderMovement);
-        leftMotor.setTargetPosition(leftMotor.getCurrentPosition() + EncoderMovement);
-
-        rightMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        leftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-        leftMotor.setPower(0.2);
-        rightMotor.setPower(0.2);
-
-        sleep(2000);
-
-        while(leftMotor.isBusy() && rightMotor.isBusy()) {
-            telemetry.addData("Right", rightMotor.isBusy());
-            telemetry.addData("Left", leftMotor.isBusy());
-            telemetry.update();
-        }
-
-        leftMotor.setPower(0);
-        rightMotor.setPower(0);
+    private void initTfod() {
+        int tfodMonitorViewId = hardwareMap.appContext.getResources().getIdentifier(
+                "tfodMonitorViewId", "id", hardwareMap.appContext.getPackageName());
+        TFObjectDetector.Parameters tfodParameters = new TFObjectDetector.Parameters(tfodMonitorViewId);
+        tfodParameters.minimumConfidence = 0.6;
+        tfod = ClassFactory.getInstance().createTFObjectDetector(tfodParameters, vuforia);
+        tfod.loadModelFromAsset(TFOD_MODEL_ASSET, LABEL_FIRST_ELEMENT, LABEL_SECOND_ELEMENT);
     }
 
-
-     */
 }// end of class

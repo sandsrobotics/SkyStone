@@ -30,9 +30,21 @@ import static org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocaliz
 
 public class XY_to_ang_LUDICROUS_MODE_OTHERSIDE extends LinearOpMode {
 
-    boolean DEBUG = false;          //Duh!
+    boolean DEBUG = true;          //Duh!
     int NUMBER_BLOCK_TO_PICKUP = 2; //wish I had # define
     boolean RED_SIDE = true;        // Field position
+    double rot;
+    double hedding;
+    double angleError = 0;
+    double target = 0;
+    double lastError = 0;
+    double Pk = 5;
+    double Dk = 5;
+    double power;
+    double timesRun = 0;
+    double leftMotorLastPos = 0;
+    // eqauation = pulses per rev / (wheel diamiter * pi)
+    double encoderPerInch = 383.6 /(4 * 3.14);
 
     //region TensorFlow and VUFORIA
     private static final String TFOD_MODEL_ASSET = "Skystone.tflite";
@@ -126,57 +138,56 @@ public class XY_to_ang_LUDICROUS_MODE_OTHERSIDE extends LinearOpMode {
         int step = 1; // Current Autonomous Step
 
 
+
         waitForStart();
 
         while (opModeIsActive()) {
 
             if (DEBUG == false){
                 if(step == 1) {
-                    moveByEncoderNOPID(500);
+
                     telemetry.addLine("0");
                     step += 1;
                 }
                 if(step == 2) {
-                    putDown();
+
                     telemetry.addLine("1");
                     step += 1;
                 }
                 if(step == 3) {
-                    startIntake();
+
                     telemetry.addLine("2");
                     step += 1;
                 }
                 if (step == 4) {
-                    moveByEncoderNOPID(1000);
+
                     telemetry.addLine("3");
                     step += 1;
                 }
                 if(step == 5) {
-                    stopIntake();
+
                     liftMotor.setTargetPosition(900);
                     liftMotor.setPower(.3);
                     telemetry.addLine("4");
                     step += 1;
                 }
                 if(step == 6) {
-                    moveByEncoderBackwardsNoPID(850);
+
                     telemetry.addLine("5");
                     step += 1;
                 }
                 if(step == 7) {
-                    moveToAngNoPID(80);
+
                     telemetry.addLine("6");
                     step += 1;
                 }
                 if(step == 8) {
-                    moveByEncoderNOPID(2400);
-                    moveByEncoderNOPID(950);
-                    moveByEncoderNOPID(350);
+
                     telemetry.addLine("7");
                     step += 1;
                 }
                 if(step == 9){
-                    moveToAngNoPID(178);
+
                     telemetry.addLine("8");
                     step += 1;
                 }
@@ -185,21 +196,19 @@ public class XY_to_ang_LUDICROUS_MODE_OTHERSIDE extends LinearOpMode {
                     servo0.setPosition(1);
                     servo1.setPosition(0);
 
-                    moveByEncoderBackwardsNoPID(500);
-
                     telemetry.addLine("9");
                     step += 1;
                 }
                 if(step == 11){
 
-                    moveByEncoderNOPID(900);
+
                     telemetry.addLine("11");
                     step += 1;
 
                 }
                 if(step == 12){
 
-                    moveToAngNoPID2(-90);
+
                     telemetry.addLine("12");
                     step += 1;
 
@@ -209,23 +218,52 @@ public class XY_to_ang_LUDICROUS_MODE_OTHERSIDE extends LinearOpMode {
             }
 
             if (DEBUG == true) { //use this area to test functions
+                telemetry.addLine("Minecraft BETA 1.8.9");
                 if (gamepad1.a) {
-                    moveByEncoder(600);
+                    while(opModeIsActive()){
+                        telemetry.addLine("0");
+                        List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
+
+                        if (updatedRecognitions != null) {
+                            telemetry.addData("# Object Detected", updatedRecognitions.size());
+                            // step through the list of recognitions and display boundary info.
+                            int i = 0;
+                            telemetry.addLine("1");
+                            for (Recognition recognition : updatedRecognitions) {
+                                if (recognition.getLabel() == "Skystone") {
+                                    // stuff when skystone is there
+
+                                    leftMotor.setPower(.1);
+                                    rightMotor.setPower(.1);
+                                    telemetry.addLine("2");
+
+                                } else {
+                                    // stuff when skystone is not there
+
+                                    leftMotor.setPower(.0);
+                                    rightMotor.setPower(.0);
+                                    telemetry.addLine("3");
+
+                                }
+                            }
+                        }
+                        telemetry.update();
+                    }
+
                 }
                 if (gamepad1.b) {
-                    moveByEncoderNOPID(500);
+
                 }
                 if (gamepad1.y) {
-                    moveByEncoderBackwardsNoPID(500);
+
                 }
                 if (gamepad1.x) {
-                    putUp();
-                    stopIntake();
+
                 } else {
                     //leftMotor.setPower(0);
                     //rightMotor.setPower(0);
                     if (sensorDistance.getDistance(DistanceUnit.CM) < 6){
-                        stopIntake();
+
                     }
                 }
             }
@@ -241,664 +279,248 @@ public class XY_to_ang_LUDICROUS_MODE_OTHERSIDE extends LinearOpMode {
 
     //------------------My Methods------------------//
 
-    /********************************
-     * Move intake down
-     ********************************/
-    void putDown() {
+    void moveToAng(double target, double tolerance) {
 
-        while(liftMotor.getCurrentPosition() < 1000){
-            liftMotor.setTargetPosition(liftMotor.getCurrentPosition()+100);
-            liftMotor.setPower(0.5);
-            liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            telemetry.addData("lift Motor",liftMotor.getCurrentPosition());
-            sleep(5);
-        }
-        liftMotor.setPower(0);
-    }
+        telemetry.update();
+        hedding = angles.firstAngle;
+        angleError = target - hedding;
+        double absulutError =  java. lang. Math. abs(angleError);
 
-    /********************************
-     * Move intake Up
-     ********************************/
-    void putUp() {
-        while(liftMotor.getCurrentPosition() > 60){
-            liftMotor.setTargetPosition(liftMotor.getCurrentPosition()-50);
-            liftMotor.setPower(0.5);
-            liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            telemetry.addData("lift Motor",liftMotor.getCurrentPosition());
-            sleep(100);
-        }
-        liftMotor.setPower(0);
-    }
+        while (absulutError > tolerance) {
 
-    /********************************
-     * Start Intake
-     ********************************/
-    void startIntake() {
-        motor2.setPower(1);
-        motor3.setPower(1);
-    }
+            if(hedding > target) {
+                rot = (Pk * angleError / 180) + (Dk * (angleError - lastError) / 180);
+                leftMotor.setPower(-(rot));
+                rightMotor.setPower(rot);
+                lastError = angleError;
 
-    /********************************
-     * Start Outtake
-     ********************************/
-    void startOuttake() {
-        motor2.setPower(-0.5);
-        motor3.setPower(-0.5);
-    }
-
-    /********************************
-     * Stop Intake
-     ********************************/
-    void stopIntake() {
-        motor2.setPower(0);
-        motor3.setPower(0);
-    }
-
-    /********************************
-     * Move forward using Encoder
-     ********************************/
-    void moveByEncoder(int EncoderMovement) {
-
-        angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
-        int encoderTarget = EncoderMovement + leftMotor.getCurrentPosition();
-        double heading = angles.firstAngle;
-        double angleError = angles.firstAngle - heading;
-        int startingPos = leftMotor.getCurrentPosition();
-        int encoderError = encoderTarget - leftMotor.getCurrentPosition();
-        double rot = 1.5; // make drive double, drive pk
-        double Pk = 2.5 / 180;
-        double Dk = 1.5 / 180;
-        double dri = 1.5; // 383.6
-        double Dpk = 1;
-        double DDk = .001;
-        double lastError = angleError;
-        int LastEncoderError = 0;
-
-        while (encoderError >= 0) {
-
-            angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
-
-            rot = (Pk * angleError) + (Dk * (angleError - lastError));
-            dri = (Dpk * encoderError) + (DDk * (encoderError - LastEncoderError));
-
-            if (dri > .5) {
-                dri = .5;
+                telemetry.update();
+                hedding = angles.firstAngle;
+                angleError = target - hedding;
+                absulutError = java.lang.Math.abs(angleError);
             }
 
-            leftMotor.setPower(rot + dri);
-            rightMotor.setPower(dri - rot);
+            if(hedding < target) {
+                rot = (Pk * angleError / 180) + (Dk * (angleError - lastError) / 180);
+                leftMotor.setPower(rot);
+                rightMotor.setPower(-rot);
+                lastError = angleError;
 
-            encoderError = encoderTarget - leftMotor.getCurrentPosition();
-            lastError = angleError;
-            angleError = angles.firstAngle - heading;
-            telemetry.addData("encoderError", encoderError);
-            telemetry.addData("rot", rot);
-            telemetry.addData("angleError", angleError);
-            telemetry.addData("heading", heading);
+                telemetry.update();
+                hedding = angles.firstAngle;
+                angleError = target - hedding;
+                absulutError = java.lang.Math.abs(angleError);
+            }
 
-            LastEncoderError = encoderError;
+            telemetry.addData("leftMotor", leftMotor.getPower());
+            telemetry.addData("rightMotor", rightMotor.getPower());
+
+            if(gamepad1.back){
+
+                break;
+
+            }
         }
-        leftMotor.setPower(0);
-        rightMotor.setPower(0);
+    }
+/*
+    void crazyRotation(double dgreezz, double tolerancess, double speed) {
+
+        hedding = getHeading();
+        //if you want it to reset every time
+        //dgreezz += angles.firstAngle;
+
+        if(hedding < dgreezz - tolerancess){
+            while(hedding < dgreezz - tolerancess) {
+
+
+
+                leftMotor.setPower(-speed);
+                rightMotor.setPower(speed);
+
+                if(gamepad1.back){
+
+                    break;
+
+                }
+                hedding = getHeading();
+            }
+        }
+        else if (hedding > dgreezz + tolerancess){
+            while(hedding > dgreezz + tolerancess) {
+
+
+
+                leftMotor.setPower(speed);
+                rightMotor.setPower(-speed);
+
+                if(gamepad1.back){
+
+                    break;
+
+                }
+                hedding = getHeading();
+            }
+        }
     }
 
-    /********************************
-     * Move forward using Encoder NO PID
-     ********************************/
-    void moveByEncoderNOPID(int EncoderMovement) {
+ */
 
-        rightMotor.setTargetPosition(rightMotor.getCurrentPosition() + EncoderMovement);
-        leftMotor.setTargetPosition(leftMotor.getCurrentPosition() + EncoderMovement);
+    double getHeading(){
 
-        rightMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        Orientation angles;
+        angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+        return angles.firstAngle;
+
+
+    }
+
+    double findError(double target1){
+
+        double hedding1 = getHeading();
+
+        double angleError1 = target1 - hedding1;
+        if (angleError1 > 180) {
+            angleError1 = angleError1 - 360;
+        } else if (angleError1 < -180) {
+            angleError1 = angleError1 + 360;
+        }
+
+        return angleError1;
+
+    }
+
+    void MoveToAngleWithFakePID (double target, double tolerance , double divitionFactor, double minPower, double minBreakSpeed){
+
+        boolean outOfRange = true;
+        double currentError;
+        int inRange = 0;
+        if (Math.abs(findError(target)) < tolerance){
+
+            outOfRange = false;
+
+        }
+
+        while((inRange <= 20) && (outOfRange) && opModeIsActive()){
+
+            currentError = findError(target);
+
+            if (Math.abs(currentError) < tolerance){
+
+                inRange ++;
+                power = 0;
+
+            }else{
+
+                inRange = 0;
+                power = (findError(target) / divitionFactor);
+
+                if (currentError > 0){
+
+                    power += minPower;
+
+                }else{
+
+                    power -= minPower;
+
+                }
+            }
+
+            leftMotor.setPower(-power);
+            rightMotor.setPower(power);
+
+            if(gamepad1.back){
+
+                break;
+
+            }
+
+            //telemetry.addData("current heading", getHeading());
+            telemetry.addData("angleError", currentError);
+            telemetry.addData("inRange", inRange);
+            telemetry.addData("time loop run", timesRun ++);
+            telemetry.addData("min power", minPower);
+            // telemetry.addData("leftMotor", leftMotor.getPower());
+            // telemetry.addData("rightMotor", rightMotor.getPower());
+            telemetry.update();
+
+        }
+
+        leftMotor.setPower(0);
+        rightMotor.setPower(0);
+
+    }
+    void moveWithRamp(double distance, double heading, double minPower, double maxPower, double rampUpFactor,double rampDownFactor, double rampDownPersent){
+
+        rightMotor.setPower(0);
+        leftMotor.setPower(0);
+
+        leftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        leftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+
+        double power = 0;
+        double error = 0;
+        double encoderTicks = distance * encoderPerInch;
+        // leftMotorLastPos = leftMotor.getCurrentPosition();
+        double distanceLeft;
+
+        leftMotor.setTargetPosition((int) encoderTicks + leftMotor.getCurrentPosition());
+        rightMotor.setTargetPosition((int) encoderTicks + rightMotor.getCurrentPosition() );
+
         leftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-        leftMotor.setPower(0.2);
-        rightMotor.setPower(0.2);
-
-        sleep(2000);
-
-        //while(leftMotor.isBusy() || rightMotor.isBusy()) {
-        //telemetry.addData("Right", rightMotor.isBusy());
-        //telemetry.addData("Left", leftMotor.isBusy());
-        //telemetry.update();
-        //}
-
-        //leftMotor.setPower(0);
-        //rightMotor.setPower(0);
-    }
-
-    /********************************
-     * Move backwards using Encoder
-     ********************************/
-    void moveByEncoderBackwards(int EncoderMovement) {
-
-        rightMotor.setDirection(DcMotor.Direction.FORWARD);
-        leftMotor.setDirection(DcMotor.Direction.REVERSE);
-
-        angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
-        int encoderTarget = EncoderMovement + leftMotor.getCurrentPosition();
-        double heading = angles.firstAngle;
-        double angleError = angles.firstAngle - heading;
-        int startingPos = leftMotor.getCurrentPosition();
-        int encoderError = encoderTarget - leftMotor.getCurrentPosition();
-        double rot = 1.5; // make drive double, drive pk
-        double Pk = 2.5 / 180;
-        double Dk = 1.5 / 180;
-        double dri = 1.5; // 383.6
-        double Dpk = 1;
-        double DDk = .001;
-        double lastError = angleError;
-        int LastEncoderError = 0;
-
-        while ((Math.abs(encoderError)) >= 10) {
-
-            angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
-
-            rot = (Pk * angleError) + (Dk * (angleError - lastError));
-            dri = (Dpk * encoderError) + (DDk * (encoderError - LastEncoderError));
-
-            if (dri < -1) {
-                dri = -1;
-            }
-
-            leftMotor.setPower(rot + dri);
-            rightMotor.setPower(dri - rot);
-
-            encoderError = encoderTarget - leftMotor.getCurrentPosition();
-            lastError = angleError;
-            angleError = angles.firstAngle - heading;
-            telemetry.addData("encoderError", encoderError);
-            telemetry.addData("rot", rot);
-            telemetry.addData("angleError", angleError);
-            telemetry.addData("heading", heading);
-
-            LastEncoderError = encoderError;
-        }
-        rightMotor.setDirection(DcMotor.Direction.REVERSE);
-        leftMotor.setDirection(DcMotor.Direction.FORWARD);
-        leftMotor.setPower(0);
-        rightMotor.setPower(0);
-    }
-
-    /********************************
-     * Move backwards using Encoder
-     ********************************/
-    void moveByEncoderBackwardsNoPID(int EncoderMovement) {
-
-        rightMotor.setDirection(DcMotor.Direction.FORWARD);
-        leftMotor.setDirection(DcMotor.Direction.REVERSE);
-
-        rightMotor.setTargetPosition(rightMotor.getCurrentPosition() + EncoderMovement);
-        leftMotor.setTargetPosition(leftMotor.getCurrentPosition() + EncoderMovement);
-
         rightMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        leftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
-        leftMotor.setPower(0.2);
-        rightMotor.setPower(0.2);
 
-        while(leftMotor.isBusy() || rightMotor.isBusy()) {
-            telemetry.addData("position", leftMotor.getCurrentPosition());
-            telemetry.update();
-        }
+        while((leftMotor.isBusy() && rightMotor.isBusy()) && opModeIsActive()) {
 
-        sleep(1000);
-        //leftMotor.setPower(0);
-        //rightMotor.setPower(0);
+            distanceLeft = encoderTicks - leftMotor.getCurrentPosition();
 
-        rightMotor.setDirection(DcMotor.Direction.REVERSE);
-        leftMotor.setDirection(DcMotor.Direction.FORWARD);
-    }
+            if (Math.abs(distanceLeft) > (Math.abs(encoderTicks) * rampDownPersent)) {
 
-    /********************************
-     * Move forward until block collected then move back to starting position
-     ********************************/
-    void getSky() {
+                power += rampUpFactor;
+                power = Math.min(power, maxPower);
 
-        angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
-        int encoderTarget = 5000 + leftMotor.getCurrentPosition();
-        double heading = angles.firstAngle;
-        double angleError = angles.firstAngle - heading;
-        int startingPos = leftMotor.getCurrentPosition();
-        int encoderError = encoderTarget - leftMotor.getCurrentPosition();
-        double rot = 1.5; // make drive double, drive pk
-        double Pk = 2.5 / 180;
-        double Dk = 1.5 / 180;
-        double dri = 1.5;
-        double Dpk = 1;
-        double DDk = .001;
-        double lastError = angleError;
-        int LastEncoderError = 0;
+            } else if (Math.abs(distanceLeft) < (Math.abs(encoderTicks) * rampDownPersent)) {
 
-        motor2.setPower(0.5);
-        motor3.setPower(0.5);
+                power -= rampDownFactor;
+                power = Math.max(power, minPower);
 
-        while ( !(sensorDistance.getDistance(DistanceUnit.CM) < 6)) { //need to be less than due to NaN
-
-            angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
-
-            dri = 0.5;
-
-            leftMotor.setPower(dri);
-            rightMotor.setPower(dri);
-
-            encoderError = encoderTarget - leftMotor.getCurrentPosition();
-            lastError = angleError;
-            angleError = angles.firstAngle - heading;
-            telemetry.addData("encoderError", encoderError);
-            telemetry.addData("rot", rot);
-            telemetry.addData("angleError", angleError);
-            telemetry.addData("heading", heading);
-
-            LastEncoderError = encoderError;
-        }
-
-        motor2.setPower(0);
-        motor3.setPower(0);
-
-        moveByEncoder(startingPos - (leftMotor.getCurrentPosition()));
-    }
-
-    /********************************
-     * Move Bot To Joystick Position
-     ********************************/
-    void moveToJoy() {
-
-        double rot;
-        double heading;
-        double angleError;
-        double target;
-        double lastError = 0;
-        double Pk = 1.5;
-        double Dk = 1.5;
-
-        if ((Math.abs(gamepad1.left_stick_x)) + (Math.abs(gamepad1.left_stick_y)) + (Math.abs(gamepad1.right_stick_y)) > 0) {
-
-            angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
-            heading = angles.firstAngle;
-
-            target = Math.atan2(-gamepad1.left_stick_x, -gamepad1.left_stick_y) / Math.PI * 180;
-
-            angleError = target - heading;
-            if (angleError > 180) {
-                angleError = angleError - 360;
-            } else if (angleError < -180) {
-                angleError = angleError + 360;
             }
 
-            rot = (Pk * angleError / 180) + (Dk * (angleError - lastError) / 180);
-            leftMotor.setPower((-(rot)) + (-((gamepad1.right_stick_y) / 2)));
-            rightMotor.setPower((rot) + (-((gamepad1.right_stick_y) / 2)));
-            lastError = angleError;
-        }
-    }
+            if (distance > 0) {
 
-    /********************************
-     * Move Bot to Angle
-     ********************************/
-    void moveToAng(double target) {
+                error = findError(heading) / 45;
 
-        rightMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        leftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
-        double Pk = 1.5;
-        double Dk = 0;
-        double Ik = 0.1;
-        double SIk = 0;
-        double rot = 0;
-        double angleError = 2;
-        double lastError = 2;
-        double heading;
-
-        while ((angleError > 1) || (angleError < -1)) {
-
-            angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
-            heading = angles.firstAngle;
-
-            angleError = target - heading;
-            if (angleError > 180) {
-                angleError = angleError - 360;
-            } else if (angleError < -180) {
-                angleError = angleError + 360;
-            }
-
-            rot = (Pk * angleError / 180) + SIk + (Dk * (angleError - lastError) / 180);
-            leftMotor.setPower(-(rot));
-            rightMotor.setPower(rot);
-            lastError = angleError;
-            SIk = SIk + (Ik * angleError / 180);
-
-        }
-
-        leftMotor.setPower(0);
-        rightMotor.setPower(0);
-    }
-
-    /********************************
-     * Move Bot by Angle
-     ********************************/
-    void moveAngNoPID(double target) {
-
-        rightMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        leftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
-        double rot = 0.4;
-        double angleError = 2;
-        double lastError = 2;
-        angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
-        double heading = angles.firstAngle;
-
-        target = heading + target;
-
-        if (target > 180) {
-            target = target - 360;
-        } else if (target < -180) {
-            target = target + 360;
-        }
-
-
-        while ((angleError > 5) || (angleError < -5)) {
-
-            angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
-            heading = angles.firstAngle;
-
-            angleError = heading - target;
-
-            if (angleError > 180) {
-                angleError = angleError - 360;
-            } else if (angleError < -180) {
-                angleError = angleError + 360;
-            }
-
-
-            if (angleError > 0) {
-                rot = -0.3;
             } else {
-                rot = 0.3;
+
+                error = -(findError(heading) / 45);
+
             }
 
-            leftMotor.setPower(-(rot));
-            rightMotor.setPower(rot);
+
+            rightMotor.setPower(power + error);
+            leftMotor.setPower(power - error);
+
         }
 
-        leftMotor.setPower(0);
+
         rightMotor.setPower(0);
-    }
-
-    /********************************
-     * Move Bot by Angle
-     ********************************/
-    void moveToAngNoPID(double target) {
-
-        rightMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        leftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
-        double rot = 0.4;
-        double angleError = 2;
-        double lastError = 2;
-        angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
-        double heading = angles.firstAngle;
-
-        if (target > 180) {
-            target = target - 360;
-        } else if (target < -180) {
-            target = target + 360;
-        }
-
-
-        while ((angleError > 1) || (angleError < -1)) {
-
-            angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
-            heading = angles.firstAngle;
-
-            angleError = heading - target;
-
-            if (angleError > 180) {
-                angleError = angleError - 360;
-            } else if (angleError < -180) {
-                angleError = angleError + 360;
-            }
-
-
-            if (angleError > 0) {
-                rot = -0.3;
-            } else {
-                rot = 0.3;
-            }
-
-            leftMotor.setPower(-(rot));
-            rightMotor.setPower(rot);
-        }
-
         leftMotor.setPower(0);
-        rightMotor.setPower(0);
+
     }
 
-    /********************************
-     * Move Bot by Angle
-     ********************************/
-    void moveToAngNoPID2(double target) {
-
-        rightMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        leftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
-        double rot = 0.7;
-        double angleError = 2;
-        double lastError = 2;
-        angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
-        double heading = angles.firstAngle;
-
-        if (target > 180) {
-            target = target - 360;
-        } else if (target < -180) {
-            target = target + 360;
-        }
-
-
-        while ((angleError > 1) || (angleError < -1)) {
-
-            angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
-            heading = angles.firstAngle;
-
-            angleError = heading - target;
-
-            if (angleError > 180) {
-                angleError = angleError - 360;
-            } else if (angleError < -180) {
-                angleError = angleError + 360;
-            }
-
-
-            if (angleError > 0) {
-                rot = -0.7;
-            } else {
-                rot = 0.7;
-            }
-
-            leftMotor.setPower(-(rot));
-            rightMotor.setPower(rot);
-        }
-
-        leftMotor.setPower(0);
-        rightMotor.setPower(0);
+    private void initTfod() {
+        int tfodMonitorViewId = hardwareMap.appContext.getResources().getIdentifier(
+                "tfodMonitorViewId", "id", hardwareMap.appContext.getPackageName());
+        TFObjectDetector.Parameters tfodParameters = new TFObjectDetector.Parameters(tfodMonitorViewId);
+        tfodParameters.minimumConfidence = 0.6;
+        tfod = ClassFactory.getInstance().createTFObjectDetector(tfodParameters, vuforia);
+        tfod.loadModelFromAsset(TFOD_MODEL_ASSET, LABEL_FIRST_ELEMENT, LABEL_SECOND_ELEMENT);
     }
 
-    /********************************
-     * returns angle to skystone
-     ********************************/
-    double findAng() {
-
-        //find ang stuff
-        double blockAnglish = 1234.5;
-
-        if (tfod != null) {
-            blockAnglish = 1;
-            // getUpdatedRecognitions() will return null if no new information is available since
-            // the last time that call was made.
-            List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
-
-            if (updatedRecognitions != null) {
-                //telemetry.addData("# Object Detected", updatedRecognitions.size());
-                blockAnglish = 2;
-                // step through the list of recognitions and display boundary info.
-                int i = 0;
-                for (Recognition recognition: updatedRecognitions) {
-                    blockAnglish = 3;
-                    if (recognition.getLabel() == "Skystone") {
-                        blockAnglish = (((recognition.getLeft() + recognition.getRight()) / 2) - 350) / 20;
-                        //telemetry.addData("Angleish", blockAnglish);
-                    }
-                    //telemetry.addData(String.format("label (%d)", i), recognition.getLabel());
-                    //telemetry.addData(String.format(" left,top (%d)", i), "%.03f , %.03f",
-                    // recognition.getLeft(), recognition.getTop());
-                    //telemetry.addData(String.format(" right,bottom (%d)", i), "%.03f , %.03f",
-                    // recognition.getRight(), recognition.getBottom());
-                }
-                //telemetry.update();
-            }
-        }
-        return (blockAnglish);
-    }
-
-    /********************************
-     * returns angle to skystone
-     ********************************/
-    double findAngNoPID() {
-
-        //find ang stuff
-        double blockAnglish = 1234.5;
-
-        if (tfod != null) {
-            blockAnglish = 1;
-            // getUpdatedRecognitions() will return null if no new information is available since
-            // the last time that call was made.
-            List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
-
-            if (updatedRecognitions != null) {
-                //telemetry.addData("# Object Detected", updatedRecognitions.size());
-                blockAnglish = 2;
-                // step through the list of recognitions and display boundary info.
-                int i = 0;
-                for (Recognition recognition: updatedRecognitions) {
-                    blockAnglish = 3;
-                    if (recognition.getLabel() == "Skystone") {
-                        blockAnglish = (((recognition.getLeft() + recognition.getRight()) / 2) - 350) / 20;
-                        //telemetry.addData("Angleish", blockAnglish);
-                    }
-                    //telemetry.addData(String.format("label (%d)", i), recognition.getLabel());
-                    //telemetry.addData(String.format(" left,top (%d)", i), "%.03f , %.03f",
-                    // recognition.getLeft(), recognition.getTop());
-                    //telemetry.addData(String.format(" right,bottom (%d)", i), "%.03f , %.03f",
-                    // recognition.getRight(), recognition.getBottom());
-                }
-                //telemetry.update();
-            }
-        }
-        return (blockAnglish);
-    }
-
-    /********************************
-     * Point Bot to skystone No PID
-     ********************************/
-    void pointToSkyNoPID() {
-
-        double rot = 0.4;
-        double angleError = 2;
-
-        while ((angleError > 1) || (angleError < -1)) {
-
-            if (tfod != null ) {
-                // getUpdatedRecognitions() will return null if no new information is available since
-                // the last time that call was made.
-                List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
-                if (updatedRecognitions != null) {
-                    telemetry.addData("# Object Detected", updatedRecognitions.size());
-                    // step through the list of recognitions and display boundary info.
-                    int i = 0;
-                    for (Recognition recognition : updatedRecognitions) {
-                        if(recognition.getLabel()=="Skystone") {
-
-                            angleError  =( ( (recognition.getLeft() + recognition.getRight())/2) - 350 ) / 20;
-
-                            telemetry.addData("Angleish",angleError);
-                        }
-                    }
-                }
-                else {
-                    angleError  = 0;
-                }
-            }
-
-            telemetry.addData("angleError", angleError);
-
-            if (angleError > 0) {
-                rot = -0.1;
-            } else {
-                rot = 0.1;
-            }
-
-            leftMotor.setPower((rot));
-            rightMotor.setPower(-(rot));
-            telemetry.update();
-        }
-
-        leftMotor.setPower(0);
-        rightMotor.setPower(0);
-    }
-
-    /********************************
-     * Point Bot to skystone using PID
-     ********************************/
-    void pointToSky() {
-
-        double Pk = 1.5;
-        double Dk = 0;
-        double Ik = 0.1;
-        double SIk = 0;
-        double rot = 0;
-
-        double angleError = findAng();
-        double lastError = 0;
-
-        while (((angleError > 1) || (angleError < -1))) {
-
-            angleError = findAng();
-            telemetry.addData("angleError", angleError);
-
-            rot = (Pk * angleError / 180) + SIk + (Dk * (angleError - lastError) / 180);
-            leftMotor.setPower((rot));
-            rightMotor.setPower(-(rot));
-            lastError = angleError;
-            //SIk = SIk + (Ik * angleError / 180);
-
-            if (angleError == 1234.5) {
-                angleError = 0;
-                telemetry.addLine("Exit Through 1234.5");
-            }
-            telemetry.update();
-        }
-
-        leftMotor.setPower(0);
-        rightMotor.setPower(0);
-    }
-
-    /**
-     * Shoots out block
-     */
-    void moveBlockInExact() {
-
-        while (sensorDistance.getDistance(DistanceUnit.CM) >= 6) {
-            motor2.setPower(0.5);
-            motor3.setPower(0.5);
-        }
-        motor2.setPower(0);
-        motor3.setPower(0);
-    }
-
-    /**
-     * Initialize the Vuforia localization engine.
-     */
     private void initVuforia() {
         /*
          * Configure Vuforia by creating a Parameter object, and passing it to the Vuforia engine.
@@ -914,17 +536,8 @@ public class XY_to_ang_LUDICROUS_MODE_OTHERSIDE extends LinearOpMode {
         // Loading trackables is not necessary for the TensorFlow Object Detection engine.
     }
 
-    /**
-     * Initialize the TensorFlow Object Detection engine.
-     */
-    private void initTfod() {
-        int tfodMonitorViewId = hardwareMap.appContext.getResources().getIdentifier(
-                "tfodMonitorViewId", "id", hardwareMap.appContext.getPackageName());
-        TFObjectDetector.Parameters tfodParameters = new TFObjectDetector.Parameters(tfodMonitorViewId);
-        tfodParameters.minimumConfidence = 0.6;
-        tfod = ClassFactory.getInstance().createTFObjectDetector(tfodParameters, vuforia);
-        tfod.loadModelFromAsset(TFOD_MODEL_ASSET, LABEL_FIRST_ELEMENT, LABEL_SECOND_ELEMENT);
-    }
 
-} //end of class
+
+}// end of class
+
 

@@ -6,6 +6,8 @@
 
 package org.firstinspires.ftc.teamcode;
 
+import android.hardware.camera2.CameraDevice;
+
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
@@ -34,9 +36,10 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
-import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
-import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
 
+
+
+import java.util.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -46,8 +49,6 @@ import static org.firstinspires.ftc.robotcore.external.navigation.AxesOrder.XYZ;
 import static org.firstinspires.ftc.robotcore.external.navigation.AxesOrder.YZX;
 import static org.firstinspires.ftc.robotcore.external.navigation.AxesReference.EXTRINSIC;
 import static org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer.CameraDirection.BACK;
-import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
-import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
 
 
 
@@ -59,14 +60,14 @@ public class StaightLine1 extends LinearOpMode {
 
     private static final VuforiaLocalizer.CameraDirection CAMERA_CHOICE = BACK;
     private static final boolean PHONE_IS_PORTRAIT = false;
-    private static final String TFOD_MODEL_ASSET = "Skystone.tflite";
+
     private static final String LABEL_FIRST_ELEMENT = "Stone";
     private static final String LABEL_SECOND_ELEMENT = "Skystone";
 
     private static final String VUFORIA_KEY =
             "Ad6cSm3/////AAABmRkDMfGtWktbjulxwWmgzxl9TiuwUBtfA9n1VM546drOcSfM+JxvMxvI1WrLSLNdapOtOebE6n3BkjTjyj+sTXHoEyyJW/lPPmlX5Ar2AjeYpTW/WZM/lzG8qDPsm0tquhEj3BUisA5GRttyGXffPwfKJZNPy3WDqnPxyY/U2v+jQNfZjsWqNvUfp3a3klhVPYd25N5dliMihK3WogqNQnZM9bwJc1wRT0zcczYBJJrhpws9A5H2FpOZD6Ov7GqT+rJdKrU6bh+smoueINDFeaFuYQVMEeo7VOLgkzOeRDpfFmVOVeJrmUv+mwnxfFthAY5v90e4kgekG5OYzRQDS2ta0dbUpG6GoJMoZU2vASSa";
 
-    private TFObjectDetector tfod; //TensorFlow Object Detection engine.
+
     // We will define some constants and conversions here
     private static final float mmPerInch = 25.4f;
     private static final float mmTargetHeight = (6) * mmPerInch;          // the height of the center of the target image above the floor
@@ -255,6 +256,8 @@ public class StaightLine1 extends LinearOpMode {
                 .translation(halfField, -quadField, mmTargetHeight)
                 .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, 90, 0, -90)));
 
+
+
         // We need to rotate the camera around it's long axis to bring the correct camera forward.
         if (CAMERA_CHOICE == BACK) {
             phoneYRotate = -90;
@@ -357,23 +360,7 @@ public class StaightLine1 extends LinearOpMode {
                 }
                 else if(gamepad1.a) {
 
-                    MoveToAngleWithFakePID(90,.5,220,.05 , 2.5);
-
-                    List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
-
-                    if (updatedRecognitions != null) {
-                        telemetry.addData("# Object Detected", updatedRecognitions.size());
-                        // step through the list of recognitions and display boundary info.
-                        int i = 0;
-                        for (Recognition recognition : updatedRecognitions) {
-                            if(recognition.getLabel()=="Skystone") {
-
-                                angleError  =( ( (recognition.getLeft() + recognition.getRight())/2) - 350 ) / 20;
-
-                                telemetry.addData("Angleish",angleError);
-                            }
-                        }
-                    }
+                    test(.05);
 
                 }
                 else if(gamepad1.x) {
@@ -397,91 +384,6 @@ public class StaightLine1 extends LinearOpMode {
         }
     }
 
-    void moveToAng(double target, double tolerance) {
-
-        telemetry.update();
-        hedding = angles.firstAngle;
-        angleError = target - hedding;
-        double absulutError =  java. lang. Math. abs(angleError);
-
-        while (absulutError > tolerance) {
-
-            if(hedding > target) {
-                rot = (Pk * angleError / 180) + (Dk * (angleError - lastError) / 180);
-                leftMotor.setPower(-(rot));
-                rightMotor.setPower(rot);
-                lastError = angleError;
-
-                telemetry.update();
-                hedding = angles.firstAngle;
-                angleError = target - hedding;
-                absulutError = java.lang.Math.abs(angleError);
-            }
-
-            if(hedding < target) {
-                rot = (Pk * angleError / 180) + (Dk * (angleError - lastError) / 180);
-                leftMotor.setPower(rot);
-                rightMotor.setPower(-rot);
-                lastError = angleError;
-
-                telemetry.update();
-                hedding = angles.firstAngle;
-                angleError = target - hedding;
-                absulutError = java.lang.Math.abs(angleError);
-            }
-
-            telemetry.addData("leftMotor", leftMotor.getPower());
-            telemetry.addData("rightMotor", rightMotor.getPower());
-
-            if(gamepad1.back){
-
-                break;
-
-            }
-        }
-    }
-/*
-    void crazyRotation(double dgreezz, double tolerancess, double speed) {
-
-        hedding = getHeading();
-        //if you want it to reset every time
-        //dgreezz += angles.firstAngle;
-
-        if(hedding < dgreezz - tolerancess){
-            while(hedding < dgreezz - tolerancess) {
-
-
-
-                leftMotor.setPower(-speed);
-                rightMotor.setPower(speed);
-
-                if(gamepad1.back){
-
-                    break;
-
-                }
-                hedding = getHeading();
-            }
-        }
-        else if (hedding > dgreezz + tolerancess){
-            while(hedding > dgreezz + tolerancess) {
-
-
-
-                leftMotor.setPower(speed);
-                rightMotor.setPower(-speed);
-
-                if(gamepad1.back){
-
-                    break;
-
-                }
-                hedding = getHeading();
-            }
-        }
-    }
-
- */
 
     double getHeading(){
 
@@ -630,13 +532,41 @@ public class StaightLine1 extends LinearOpMode {
 
     }
 
-    private void initTfod() {
-        int tfodMonitorViewId = hardwareMap.appContext.getResources().getIdentifier(
-                "tfodMonitorViewId", "id", hardwareMap.appContext.getPackageName());
-        TFObjectDetector.Parameters tfodParameters = new TFObjectDetector.Parameters(tfodMonitorViewId);
-        tfodParameters.minimumConfidence = 0.6;
-        tfod = ClassFactory.getInstance().createTFObjectDetector(tfodParameters, vuforia);
-        tfod.loadModelFromAsset(TFOD_MODEL_ASSET, LABEL_FIRST_ELEMENT, LABEL_SECOND_ELEMENT);
+    public List<VuforiaTrackable> getAllTrackables() {
+        return allTrackables;
     }
 
+    void test(double speed) {
+
+       // com.vuforia.CameraDevice.getInstance().setFlashTorchMode(true);
+
+        leftMotor.setPower(speed);
+        rightMotor.setPower(speed);
+
+        targetVisible = false;
+
+        while (!targetVisible && opModeIsActive()) {
+
+            for (VuforiaTrackable trackable : allTrackables) {
+
+                if (((VuforiaTrackableDefaultListener) trackable.getListener()).isVisible()) {
+
+            telemetry.addData("Visible Target", trackable.getName());
+
+
+
+                    targetVisible = true;
+
+               }
+            }
+
+            telemetry.addLine("searching");
+            telemetry.update();
+
+        }
+
+        leftMotor.setPower(0);
+        rightMotor.setPower(0);
+
+    }
 }// end of class

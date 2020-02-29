@@ -381,8 +381,8 @@ public class NewMeRoboRio extends LinearOpMode {
 
                 }
 
-                leftMotor.setPower(gamepad1.left_stick_y);
-                rightMotor.setPower(gamepad1.right_stick_y);
+                leftMotor.setPower(((gamepad2.right_trigger - gamepad2.left_trigger) + gamepad2.left_stick_x) / 2);
+                rightMotor.setPower(((gamepad2.right_trigger - gamepad2.left_trigger) - gamepad2.left_stick_x) / 2);
             }
         }
     }

@@ -67,7 +67,7 @@ public class teleop extends LinearOpMode {
                 lancher_position();
                 slow_mode();
                 drive_robot();
-                foundation_grabber(.5);
+                foundation_grabber(1);
                 launcher_drive();
                 data_out();
                 Pickingupblockled();

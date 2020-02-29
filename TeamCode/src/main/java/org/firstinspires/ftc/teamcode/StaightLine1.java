@@ -14,7 +14,7 @@ import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
 import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.ColorSensor;
+//import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
@@ -126,13 +126,13 @@ public class StaightLine1 extends LinearOpMode {
     BNO055IMU imu;
     Orientation angles;
     Acceleration gravity;
-    ColorSensor sensorColor;
+   // ColorSensor sensorColor;
     DistanceSensor sensorDistance;
 
     private DigitalChannel digital0;
     private DcMotor motor2;
     private DcMotor motor3;
-    private ColorSensor sensorColorRange;
+   // private ColorSensor sensorColorRange;
     private Servo servo0;
     private Servo servo1;
     private RevBlinkinLedDriver blinkin;
@@ -153,7 +153,7 @@ public class StaightLine1 extends LinearOpMode {
         servo0 = hardwareMap.servo.get("servo0"); // test
         servo1 = hardwareMap.servo.get("servo1");
         blinkin = hardwareMap.get(RevBlinkinLedDriver.class, "blinkin");
-        sensorDistance = hardwareMap.get(DistanceSensor.class, "sensor_color_distance");
+       // sensorDistance = hardwareMap.get(DistanceSensor.class, "sensor_color_distance");
 
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
         VuforiaLocalizer.Parameters Vparameters = new VuforiaLocalizer.Parameters(cameraMonitorViewId);
@@ -355,7 +355,7 @@ public class StaightLine1 extends LinearOpMode {
             if (debug == true) {
                 if (gamepad1.b) {
 
-                    MoveToAngleWithFakePID(90,1,100,.05 , 2.5);
+                    //MoveToAngleWithFakePID(90,1,100,.05 , 2.5);
 
                 }
                 else if(gamepad1.a) {

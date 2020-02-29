@@ -5,17 +5,17 @@ import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
 import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.ColorSensor;
+//import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
-import com.qualcomm.robotcore.hardware.DistanceSensor;
+//import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+//import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer.CameraDirection;
@@ -66,9 +66,9 @@ public class XY_to_ang_LUDICROUS_MODE_OTHERSIDE extends LinearOpMode {
     //endregion
 
     //region Sensor
-    ColorSensor sensorColor;
-    DistanceSensor sensorDistance;
-    private DistanceSensor sensorColorRange;
+    //ColorSensor sensorColor;
+   // DistanceSensor sensorDistance;
+    //private DistanceSensor sensorColorRange;
     private DigitalChannel digital0;
     //endregion
 
@@ -111,14 +111,20 @@ public class XY_to_ang_LUDICROUS_MODE_OTHERSIDE extends LinearOpMode {
         servo0 = hardwareMap.servo.get("servo0"); // test
         servo1 = hardwareMap.servo.get("servo1");
         blinkin = hardwareMap.get(RevBlinkinLedDriver.class, "blinkin");
-        sensorDistance = hardwareMap.get(DistanceSensor.class, "sensor_color_distance");
+       // sensorDistance = hardwareMap.get(DistanceSensor.class, "sensor_color_distance");
         // Set Motors
         leftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         rightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
         motor2.setDirection(DcMotor.Direction.REVERSE);
+
         rightMotor.setDirection(DcMotor.Direction.REVERSE);
-        //liftMotor.setDirection(DcMotor.Direction.REVERSE);
-        liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+        leftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+        leftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         // endregion
 
         //region IMU Start
@@ -220,7 +226,8 @@ public class XY_to_ang_LUDICROUS_MODE_OTHERSIDE extends LinearOpMode {
             if (DEBUG == true) { //use this area to test functions
                 telemetry.addLine("Minecraft BETA 1.8.9");
                 if (gamepad1.a) {
-                    while(opModeIsActive()){
+                    /*
+                    while(opModeIsActive() && !gamepad1.back){
                         telemetry.addLine("0");
                         List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
 
@@ -233,15 +240,15 @@ public class XY_to_ang_LUDICROUS_MODE_OTHERSIDE extends LinearOpMode {
                                 if (recognition.getLabel() == "Skystone") {
                                     // stuff when skystone is there
 
-                                    leftMotor.setPower(.1);
-                                    rightMotor.setPower(.1);
+                                    leftMotor.setPower(0);
+                                    rightMotor.setPower(0);
                                     telemetry.addLine("2");
 
                                 } else {
                                     // stuff when skystone is not there
 
-                                    leftMotor.setPower(.0);
-                                    rightMotor.setPower(.0);
+                                    leftMotor.setPower(.1);
+                                    rightMotor.setPower(.1);
                                     telemetry.addLine("3");
 
                                 }
@@ -249,6 +256,9 @@ public class XY_to_ang_LUDICROUS_MODE_OTHERSIDE extends LinearOpMode {
                         }
                         telemetry.update();
                     }
+
+                     */
+                    test(.05);
 
                 }
                 if (gamepad1.b) {
@@ -262,9 +272,9 @@ public class XY_to_ang_LUDICROUS_MODE_OTHERSIDE extends LinearOpMode {
                 } else {
                     //leftMotor.setPower(0);
                     //rightMotor.setPower(0);
-                    if (sensorDistance.getDistance(DistanceUnit.CM) < 6){
+                    //if (sensorDistance.getDistance(DistanceUnit.CM) < 6){
 
-                    }
+                    //}
                 }
             }
 
@@ -454,9 +464,6 @@ public class XY_to_ang_LUDICROUS_MODE_OTHERSIDE extends LinearOpMode {
         rightMotor.setPower(0);
         leftMotor.setPower(0);
 
-        leftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        rightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-
         leftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
@@ -534,6 +541,50 @@ public class XY_to_ang_LUDICROUS_MODE_OTHERSIDE extends LinearOpMode {
         vuforia = ClassFactory.getInstance().createVuforia(parameters);
 
         // Loading trackables is not necessary for the TensorFlow Object Detection engine.
+    }
+
+    void test(double speed){
+
+        boolean skyStone = false;
+
+
+
+        leftMotor.setPower(speed);
+        rightMotor.setPower(speed);
+
+        while(!skyStone && !gamepad1.back){
+
+            telemetry.addLine("0");
+            List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
+
+            if (updatedRecognitions != null) {
+                telemetry.addData("# Object Detected", updatedRecognitions.size());
+                // step through the list of recognitions and display boundary info.
+                int i = 0;
+                telemetry.addLine("1");
+                for (Recognition recognition : updatedRecognitions) {
+                    if (recognition.getLabel() == "Skystone") {
+                        // stuff when skystone is there
+
+                        telemetry.addLine("2");
+                        skyStone = true;
+
+                    } else {
+                        // stuff when skystone is not there
+
+                        telemetry.addLine("3");
+
+                    }
+                }
+            }
+
+            telemetry.update();
+
+        }
+
+        leftMotor.setPower(0);
+        rightMotor.setPower(0);
+
     }
 
 

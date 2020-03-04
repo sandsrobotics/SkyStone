@@ -326,48 +326,37 @@ public class NewMeRoboRio extends LinearOpMode {
             yPos = position.y;
             zPos = position.z;
 
-
-            telemetry.addData("Xpos", zPos);
-            telemetry.addData("Ypos", yPos);
-            telemetry.addData("Zpos", xPos);
-            telemetry.addData("RightMotor", leftMotor.getPower());
-            telemetry.addData("LeftMotor", rightMotor.getPower());
-            telemetry.addData("This is E", angleError);
-            telemetry.addData("This is target", target);
-            telemetry.addData("current heading", getHeading());
-            telemetry.addData("arm Pos ",servo0Pos);
-            telemetry.addData("elbow Pos ",servo1Pos);
-            telemetry.addData("arm real Pos ",Hand.getPosition());
-            telemetry.addData("elbow real Pos ",Elbow.getPosition());
-            telemetry.addData("version " , "4.5");
+            telemetry.addData("elbow",Elbow);
+            telemetry.addData("hand ",Hand.getPosition());
             telemetry.update();
 
             if (debug == true) {
                 if (gamepad1.y) {
 
-                    if(servo0Pos < 1) {
-
-                        servo0Pos += 0.01;
-                        Hand.setPosition(servo0Pos);
-
+                    while(gamepad1.y) {
+                        Hand.setPosition(.5); // set elbow 50
+                        sleep(500);
+                        Elbow.setPosition(.9); // set hand open
+                        sleep(500);
+                        Hand.setPosition(0);// set elbow down
+                        sleep(500);
+                        Elbow.setPosition(.3);// set hand closed
                     }
 
                 }
                 else if(gamepad1.a) {
 
-                    if(servo0Pos > 0) {
-
-                        servo0Pos -= 0.01;
-                        Hand.setPosition(servo0Pos);
-
+                    while(gamepad1.a) {
+                        Hand.setPosition(0);
+                        Elbow.setPosition(.2);
                     }
 
                 }
                 else if(gamepad1.x) {
 
                     if(servo1Pos < 1) {
-                        servo1Pos += 0.01;
-                        Elbow.setPosition(servo1Pos);
+                        servo0Pos += 0.0001;
+                        Hand.setPosition(servo0Pos);
 
                     }
 
@@ -375,7 +364,7 @@ public class NewMeRoboRio extends LinearOpMode {
                 else if (gamepad1.b){
 
                     if(servo1Pos > 0) {
-                        servo1Pos -= 0.01;
+                        servo1Pos += 0.0001;
                         Elbow.setPosition(servo1Pos);
                     }
 

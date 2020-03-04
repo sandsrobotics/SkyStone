@@ -224,7 +224,6 @@ public class XY_to_ang_LUDICROUS_MODE_OTHERSIDE extends LinearOpMode {
             }
 
             if (DEBUG == true) { //use this area to test functions
-                telemetry.addLine("Minecraft BETA 1.8.9");
                 if (gamepad1.a) {
                     /*
                     while(opModeIsActive() && !gamepad1.back){

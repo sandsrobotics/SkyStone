@@ -54,6 +54,7 @@ import static org.firstinspires.ftc.robotcore.external.navigation.AxesOrder.XYZ;
 import static org.firstinspires.ftc.robotcore.external.navigation.AxesOrder.YZX;
 import static org.firstinspires.ftc.robotcore.external.navigation.AxesReference.EXTRINSIC;
 import static org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer.CameraDirection.BACK;
+import com.vuforia.CameraDevice;
 
 // imu
 
@@ -359,107 +360,76 @@ public class TestVision extends LinearOpMode {
         // AFTER you hit Init on the Driver Station, use the "options menu" to select "Camera Stream"
         // Tap the preview window to receive a fresh image.
 
-
+        CameraDevice.getInstance().setFlashTorchMode(true);
         targetsSkyStone.activate();
-        while (!isStopRequested()) {
-
+        while (opModeIsActive()) {
+            //CameraDevice.getInstance().setFlashTorchMode(true);
             // check all the trackable targets to see which one (if any) is visible.
-            targetVisible = false;
-            for (VuforiaTrackable trackable : allTrackables) {
-                if (((VuforiaTrackableDefaultListener) trackable.getListener()).isVisible()) {
-                    telemetry.addData("Visible Target", trackable.getName());
-                    targetVisible = true;
+            while(!foundBlock){
 
-                    // getUpdatedRobotLocation() will return null if no new information is available since
-                    // the last time that call was made, or if the trackable is not currently visible.
-                    OpenGLMatrix robotLocationTransform = ((VuforiaTrackableDefaultListener) trackable.getListener()).getUpdatedRobotLocation();
-                    if (robotLocationTransform != null) {
-                        lastLocation = robotLocationTransform;
-                    }
-                    break;
-                }
+                telemetry.addData("found block", foundBlock);
+                isBlock();
+
             }
 
-            // Provide feedback as to where the robot is located (if we know).
-            if (targetVisible) {
-                // express position (translation) of robot in inches.
-                telemetry.addData("found block", "true");
-                VectorF translation = lastLocation.getTranslation();
-                telemetry.addData("Pos (in)", "{X, Y, Z} = %.1f, %.1f, %.1f",
-                        translation.get(0) / mmPerInch, translation.get(1) / mmPerInch, translation.get(2) / mmPerInch);
-
-                // express the rotation of the robot in degrees.
-                Orientation rotation = Orientation.getOrientation(lastLocation, EXTRINSIC, XYZ, DEGREES);
-                telemetry.addData("Rot (deg)", "{Roll, Pitch, Heading} = %.0f, %.0f, %.0f", rotation.firstAngle, rotation.secondAngle, rotation.thirdAngle);
-
-            } else {
-                telemetry.addData("found block", "false");
-            }
-
-            ///////////////////////
-            //your code goes here//
-            ///////////////////////
-
-            moveTillBlockBackwards(.2, 10);
-
-            telemetry.update();
-
+            CameraDevice.getInstance().setFlashTorchMode(false);
+            targetsSkyStone.deactivate();
 
         }
+
+
+
     }
 
     //functions go here
 
-    void moveTillBlock(double motorPower, int speed) {
+    public void isBlock(){
 
-        if (!targetVisible && !foundBlock) {
+        VuforiaTrackables targetsSkyStone = this.vuforia.loadTrackablesFromAsset("Skystone");
+        List<VuforiaTrackable> allTrackables = new ArrayList<VuforiaTrackable>();
+        allTrackables.addAll(targetsSkyStone);
 
-            leftMotorPos += speed;
-            rightMotorPos += speed;
-
-            leftMotor.setTargetPosition(leftMotorPos);
-            leftMotor.setPower(motorPower);
-            leftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-            rightMotor.setTargetPosition(rightMotorPos);
-            rightMotor.setPower(motorPower);
-            rightMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-        } else if (targetVisible) {
-
-            foundBlock = true;
-
-        }
-    }
-
-    void move(int distance, int speed) {
+        targetVisible = false;
 
 
-        //while(){}
-        leftMotorPos += speed;
-        rightMotorPos += speed;
+        for (VuforiaTrackable trackable : allTrackables) {
+            if (((VuforiaTrackableDefaultListener) trackable.getListener()).isVisible()) {
+                telemetry.addData("Visible Target", trackable.getName());
 
-    }
+                targetVisible = true;
+                foundBlock = true;
 
-    void moveTillBlockBackwards(double motorPower, int speed) {
+                OpenGLMatrix robotLocationTransform = ((VuforiaTrackableDefaultListener) trackable.getListener()).getUpdatedRobotLocation();
+                if (robotLocationTransform != null) {
+                    lastLocation = robotLocationTransform;
+                }
+                break;
+            }
 
-        if (!targetVisible && !foundBlock) {
+            else{
 
-            leftMotorPos -= speed;
-            rightMotorPos -= speed;
+                foundBlock = false;
 
-            leftMotor.setTargetPosition(leftMotorPos);
-            leftMotor.setPower(motorPower);
-            leftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-            rightMotor.setTargetPosition(rightMotorPos);
-            rightMotor.setPower(motorPower);
-            rightMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-        } else if (targetVisible) {
-
-            foundBlock = true;
+            }
 
         }
+
+        // Provide feedback as to where the robot is located (if we know).
+        if (targetVisible) {
+            // express position (translation) of robot in inches.
+            telemetry.addData("found block", "true");
+            VectorF translation = lastLocation.getTranslation();
+            telemetry.addData("Pos (in)", "{X, Y, Z} = %.1f, %.1f, %.1f",
+                    translation.get(0) / mmPerInch, translation.get(1) / mmPerInch, translation.get(2) / mmPerInch);
+
+            // express the rotation of the robot in degrees.
+            Orientation rotation = Orientation.getOrientation(lastLocation, EXTRINSIC, XYZ, DEGREES);
+            telemetry.addData("Rot (deg)", "{Roll, Pitch, Heading} = %.0f, %.0f, %.0f", rotation.firstAngle, rotation.secondAngle, rotation.thirdAngle);
+
+        }
+
+        telemetry.update();
+
     }
+
 }

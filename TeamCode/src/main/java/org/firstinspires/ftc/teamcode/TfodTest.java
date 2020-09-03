@@ -82,7 +82,7 @@ import static org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocaliz
  * IMPORTANT: In order to use this OpMode, you need to obtain your own Vuforia license key as
  * is explained below.
  */
-@Autonomous(name="SKYSTONE Vuforia Nav", group ="Concept")
+@Autonomous(name="SKYSTONE Vuforia Nav Tfod", group ="Concept")
 
 public class TfodTest extends LinearOpMode {
 

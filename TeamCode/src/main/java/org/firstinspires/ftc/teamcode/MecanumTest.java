@@ -22,6 +22,7 @@ public class MecanumTest extends LinearOpMode
     public void runOpMode()
     {
        robot = new Robot(hardwareMap, telemetry);
+       waitForStart();
        robot.moveForwardInches(5,.5);
     }
 

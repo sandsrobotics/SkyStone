@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import java.util.Arrays;
@@ -10,7 +11,7 @@ import java.util.List;
 
 public class Robot
 {
-    boolean debug = true;
+
     DcMotor leftTopMotor, leftBottomMotor, rightTopMotor, rightBottomMotor;
     HardwareMap hardwareMap;
     Telemetry telemetry;
@@ -18,11 +19,12 @@ public class Robot
     List<DcMotor> motors;
 
     //variables
+    boolean debug = true;
+    boolean[] flipMotorDir = {true, true, false, false};
     int leftTopMotorNum = 0;
-    int leftBottomMotorNum = 1;
-    int rightTopMotorNum = 2;
+    int leftBottomMotorNum = 2;
+    int rightTopMotorNum = 1;
     int rightBottomMotorNum = 3;
-
     int ticksToInches = 100;
 
     Robot(HardwareMap hardwareMap, Telemetry telemetry)
@@ -48,11 +50,14 @@ public class Robot
         //////////////
         //motor init//
         //////////////
+        int i = 0;
         for(DcMotor motor:motors)
         {
             motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
             motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            if(flipMotorDir[i]) motor.setDirection(DcMotor.Direction.REVERSE);
+            i++;
         }
 
         ////////

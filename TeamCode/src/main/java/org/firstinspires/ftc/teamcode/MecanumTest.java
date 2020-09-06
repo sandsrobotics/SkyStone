@@ -1,19 +1,14 @@
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.hardware.bosch.BNO055IMU;
-import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
-import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
+import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.DigitalChannel;
-import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.hardware.Servo;
+
 
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 
-@TeleOp(name = "test2020", group = "")
+@Config
+@TeleOp(name = "test2020")
 public class MecanumTest extends LinearOpMode
 {
     Robot robot;
@@ -24,6 +19,7 @@ public class MecanumTest extends LinearOpMode
        robot = new Robot(hardwareMap, telemetry);
        waitForStart();
        robot.moveForwardInches(5,.5);
+       robot.turn(90,1,20,10000);
     }
 
 }

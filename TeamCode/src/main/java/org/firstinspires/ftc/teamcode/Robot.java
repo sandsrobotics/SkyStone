@@ -161,6 +161,17 @@ public class Robot
             motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         }
     }
+    void moveMotorForwardSeparateAmount(int[] ticks, double power)
+    {
+        int i = 0;
+        for(DcMotor motor: motors)
+        {
+            motor.setTargetPosition(ticks[i]);
+            motor.setPower(power);
+            motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            i++;
+        }
+    }
     void stopMotors()
     {
         for(DcMotor motor: motors)
@@ -168,11 +179,20 @@ public class Robot
             motor.setPower(0);
         }
     }
-    void setMotorToPower(double power)
+    void setMotorsToPower(double power)
     {
         for(DcMotor motor: motors)
         {
             motor.setPower(power);
+        }
+    }
+    void setMotorsToSeparatePowers(double[] powers)
+    {
+        int i = 0;
+        for(DcMotor motor: motors)
+        {
+            motor.setPower(powers[i]);
+            i++;
         }
     }
     void testMotors(int maxTicks, int minTicks)
@@ -229,14 +249,16 @@ public class Robot
         }
         return angleError;
     }
-    double getCorrectionFromPID(PIDCoefficients PID, double error, double lastError, double bias) // this method takes values from -1 to 1 and returns a value from -1 to 1(except for PID coefficients)
+    double getCorrectionFromPID(PIDCoefficients PID, double error, double lastError, double bias,  double IntegralRange) // this method takes values from -1 to 1 and returns a value from -1 to 1(except for PID coefficients)
     {
-        I += error;
-        I = Math.max(Math.min(I, 1), -1);
+        if(Math.abs(error) <= IntegralRange)
+        {
+            I += error * PID.i;
+            I = Math.max(Math.min(I, 1), -1);
+        }
 
         double D = (error - lastError);
-
-        double output = (PID.p * error) + (PID.i * I) +(PID.d * D) + bias;
+        double output = (PID.p * error) + I +(PID.d * D) + bias;
         return Math.max(Math.min(output, 1), -1);
     }
 
@@ -245,23 +267,9 @@ public class Robot
     ////////////
     void moveForwardInches(float inches, double power)
     {
-        for(DcMotor motor: motors)
-        {
-            motor.setTargetPosition(motor.getCurrentPosition() + (int)(inches * ticksPerInchForward));
-            motor.setPower(power);
-            motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        }
+        moveMotorsForward((int)(ticksPerInchForward * inches), power);
     }
-    void moveForwardTicks(int ticks, double power)
-    {
-        for(DcMotor motor: motors)
-        {
-            motor.setTargetPosition(motor.getCurrentPosition() + ticks);
-            motor.setPower(power);
-            motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        }
-    }
-    void turn(double targetAngle, double tolerance, int numOfTimesToStayInTolerance, int maxRuntime)
+    void turnToAng(double targetAngle, double tolerance, int numOfTimesToStayInTolerance, int maxRuntime)
     {
         I = 0;
         double currentAngle = getAngles().thirdAngle;
@@ -272,24 +280,87 @@ public class Robot
         int numOfTimesRun = 0;
 
         setMotorsToRunWithEncoders();
+        setMotorsToBrake();
 
         while(numOfTimesInTolerance < numOfTimesToStayInTolerance)
         {
             lastError = error;
             currentAngle = getAngles().thirdAngle;
             error = findAngleError(currentAngle, targetAngle);
-            pow = getCorrectionFromPID(turnPID, (error / 180), (lastError / 180), 0);
+            pow = getCorrectionFromPID(turnPID, (error / 180), (lastError / 180), 0, .1);
+
+            if(Math.abs(error) < tolerance)
+            {
+                numOfTimesInTolerance ++;
+                I = 0;
+                pow = 0;
+            }
+            else numOfTimesInTolerance = 0;
 
             leftTopMotor.setPower(pow);
             leftBottomMotor.setPower(pow);
             rightTopMotor.setPower(-pow);
             rightBottomMotor.setPower(-pow);
 
-            if(Math.abs(error) < tolerance) numOfTimesInTolerance ++;
-            else numOfTimesInTolerance = 0;
             numOfTimesRun ++;
             if(numOfTimesRun >= maxRuntime || emergencyStop) break;
         }
         stopMotors();
+    }
+    void turnWithPower(double power)
+    {
+        leftTopMotor.setPower(power);
+        leftBottomMotor.setPower(power);
+        rightTopMotor.setPower(-power);
+        rightBottomMotor.setPower(-power);
+    }
+    void strafeSidewaysWithPower(double power)
+    {
+        leftTopMotor.setPower(power);
+        leftBottomMotor.setPower(-power);
+        rightTopMotor.setPower(-power);
+        rightBottomMotor.setPower(power);
+    }
+    void strafeSidewaysTicks(int ticks, double power)
+    {
+        int[] arr = {ticks, -ticks, -ticks, ticks};
+        moveMotorForwardSeparateAmount(arr,0);
+    }
+    void strafeSidewaysInches(float inches, double power)
+    {
+        strafeSidewaysTicks((int)(ticksPerInchSideways * inches), power);
+    }
+    void moveAtAngleWithPower(double angle, double power) //in this method angle should be from -180 to 180
+    {
+        double[] arr = {power,power,power,power};
+        if(angle >= 0 && angle <= 90)
+        {
+            double processedAngle = (45 - angle)/45;
+            arr[1] *= processedAngle;
+            arr[2] *= processedAngle;
+        }
+        else if(angle > 90)
+        {
+            double processedAngle = (135 - angle)/45;
+            arr[0] *= processedAngle;
+            arr[1] *= -1;
+            arr[2] *= -1;
+            arr[3] *= processedAngle;
+        }
+        else if(angle >= -90 && angle < 0)
+        {
+            double processedAngle = (angle + 45)/45;
+            arr[0] *= processedAngle;
+            arr[3] *= processedAngle;
+        }
+        else
+        {
+            double processingAngle = (angle + 135)/45;
+            arr[0] *= -1;
+            arr[1] *= processingAngle;
+            arr[2] *= processingAngle;
+            arr[3] *=-1;
+        }
+        setMotorsToSeparatePowers(arr);
     }
 }

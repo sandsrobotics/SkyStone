@@ -19,7 +19,7 @@ public class MecanumTest extends LinearOpMode
        robot = new Robot(hardwareMap, telemetry);
        waitForStart();
        robot.moveForwardInches(5,.5);
-       robot.turn(90,1,20,10000);
+       robot.turnToAng(90,1,20,10000);
     }
 
 }

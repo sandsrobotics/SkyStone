@@ -18,18 +18,12 @@ public class MecanumTest extends LinearOpMode
     {
        robot = new Robot(hardwareMap, telemetry, gamepad1, gamepad2);
        waitForStart();
+       robot.moveForwardInches(2,.5);
+       robot.turnToAng(45,.5,50,10000);
+       robot.moveAtAngleToInches(-45,.5,3);
        while(opModeIsActive())
        {
-           double[] joystick = {gamepad1.left_stick_x, gamepad1.left_stick_y};
-           double power;
-           if(Math.abs(joystick[0]) > Math.abs(joystick[1])) power = joystick[0];
-           else power = joystick[1];
-           if(power > 0)
-           {
-               double angle = (Math.atan2(joystick[1], joystick[0])) * 57;
-               robot.moveAtAngleWithPower(angle, power);
-           }
-
+           robot.moveForTeleOp();
        }
     }
 

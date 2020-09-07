@@ -47,7 +47,7 @@ public class Robot
     // user dashboard variables
     public static int ticksPerInchForward = 100;
     public static int ticksPerInchSideways = 100;
-    public static PIDCoefficients turnPID = new PIDCoefficients(0,0,0);
+    public static PIDCoefficients turnPID = new PIDCoefficients(.01,.01,.01);
     public static boolean emergencyStop = false;
 
     // non-user variables
@@ -270,7 +270,7 @@ public class Robot
         }
 
         double D = (error - lastError);
-        double output = (PID.p * error) + I +(PID.d * D) + bias;
+        double output = (PID.p * error) + I + (PID.d * D) + bias;
         return Math.max(Math.min(output, 1), -1);
     }
 

@@ -4,6 +4,7 @@ import com.acmerobotics.dashboard.FtcDashboard;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PIDCoefficients;
 
@@ -24,6 +25,8 @@ public class Robot
     //objects
     protected HardwareMap hardwareMap;
     protected Telemetry telemetry;
+    protected Gamepad gamepad1;
+    protected Gamepad gamepad2;
     protected DcMotor leftTopMotor, leftBottomMotor, rightTopMotor, rightBottomMotor;
     private BNO055IMU imu;
     private List<DcMotor> motors;
@@ -50,10 +53,12 @@ public class Robot
     // non-user variables
     protected double I = 0;
 
-    Robot(HardwareMap hardwareMap, Telemetry telemetry)
+    Robot(HardwareMap hardwareMap, Telemetry telemetry, Gamepad g1, Gamepad g2)
     {
         this.hardwareMap = hardwareMap;
         this.telemetry = telemetry;
+        this.gamepad1 = g1;
+        this.gamepad2 = g2;
 
         initHardware();
         if(debug_motors) testMotors(200,-200);
@@ -141,6 +146,13 @@ public class Robot
         for(DcMotor motor: motors)
         {
             motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        }
+    }
+    void setMotorsToRunToPosition()
+    {
+        for(DcMotor motor: motors)
+        {
+            motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         }
     }
     void setMotorsToPosition(int ticks, double power)
@@ -330,9 +342,9 @@ public class Robot
     {
         strafeSidewaysTicks((int)(ticksPerInchSideways * inches), power);
     }
-    void moveAtAngleWithPower(double angle, double power) //in this method angle should be from -180 to 180
+    double[] powerForMoveAtAngle(double angle, double basePower)
     {
-        double[] arr = {power,power,power,power};
+        double[] arr = {basePower, basePower, basePower, basePower};
         if(angle >= 0 && angle <= 90)
         {
             double processedAngle = (45 - angle)/45;
@@ -361,6 +373,38 @@ public class Robot
             arr[2] *= processingAngle;
             arr[3] *=-1;
         }
+        return arr;
+    }
+    void moveAtAngleWithPower(double angle, double power) //in this method angle should be from -180 to 180
+    {
+        setMotorsToSeparatePowers(powerForMoveAtAngle(angle,power));
+    }
+    void moveAtAngleToInches(double angle, double power, float inches)
+    {
+        double[] arr = powerForMoveAtAngle(angle, power);
+        double forwardAmount = Math.abs(Math.abs(angle) - 90)/90;
+        double sideWaysAmount = 1 - forwardAmount;
+        int totalTicks = (int)((inches*ticksPerInchForward*forwardAmount) + (inches*ticksPerInchSideways*sideWaysAmount));
+
+        int i = 0;
+        for(DcMotor motor:motors)
+        {
+            motor.setTargetPosition((int)(totalTicks * arr[i]));
+            arr[i] = Math.abs(arr[i]);
+            i++;
+        }
+
         setMotorsToSeparatePowers(arr);
+        setMotorsToRunToPosition();
+    }
+    void moveForTeleOp()
+    {
+        double[] powers = new double[4];
+        powers[0] = gamepad1.left_stick_x + gamepad1.left_stick_y + gamepad1.right_stick_x;
+        powers[1] = gamepad1.left_stick_x - gamepad1.left_stick_y + gamepad1.right_stick_x;
+        powers[2] = gamepad1.left_stick_x - gamepad1.left_stick_y - gamepad1.right_stick_x;
+        powers[3] = gamepad1.left_stick_x + gamepad1.left_stick_y - gamepad1.right_stick_x;
+        for(int i = 0; i < 4; i++) powers[i] = Math.max(Math.min(powers[i], 1), 0);
+        setMotorsToSeparatePowers(powers);
     }
 }

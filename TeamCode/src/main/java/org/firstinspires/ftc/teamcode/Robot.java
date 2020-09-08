@@ -37,6 +37,7 @@ public class Robot
         protected boolean debug_motors = true;
         protected boolean debug_imu = true;
         protected boolean debug_dashboard = true; // turn this to false during competition
+        protected boolean test_motors = false;
         //other
         protected boolean[] flipMotorDir = {true, true, false, false};
         protected int leftTopMotorNum = 0;
@@ -45,8 +46,8 @@ public class Robot
         protected int rightBottomMotorNum = 3;
 
     // user dashboard variables
-    public static int ticksPerInchForward = 100;
-    public static int ticksPerInchSideways = 100;
+    public static double ticksPerInchForward = 191.8;
+    public static double ticksPerInchSideways = 191.8;
     public static PIDCoefficients turnPID = new PIDCoefficients(.01,.01,.01);
     public static boolean emergencyStop = false;
 
@@ -61,7 +62,7 @@ public class Robot
         this.gamepad2 = g2;
 
         initHardware();
-        if(debug_motors) testMotors(200,-200);
+        if(test_motors) testMotors(200,-200);
     }
 
     void initHardware()
@@ -404,7 +405,7 @@ public class Robot
         powers[1] = gamepad1.left_stick_x - gamepad1.left_stick_y + gamepad1.right_stick_x;
         powers[2] = gamepad1.left_stick_x - gamepad1.left_stick_y - gamepad1.right_stick_x;
         powers[3] = gamepad1.left_stick_x + gamepad1.left_stick_y - gamepad1.right_stick_x;
-        for(int i = 0; i < 4; i++) powers[i] = Math.max(Math.min(powers[i], 1), 0);
+        for(int i = 0; i < 4; i++) powers[i] = Math.max(Math.min(powers[i], 1), -1);
         setMotorsToSeparatePowers(powers);
     }
 }

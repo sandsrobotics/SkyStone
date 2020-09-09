@@ -18,9 +18,9 @@ public class MecanumTest extends LinearOpMode
     {
        robot = new Robot(hardwareMap, telemetry, gamepad1, gamepad2);
        waitForStart();
-       robot.moveForwardInches(2,.5);
+       robot.moveForwardInches(7,.5);
        robot.turnToAng(45,.5,50,10000);
-       robot.moveAtAngleToInches(-45,.5,3);
+       robot.moveAtAngleToInches(-45,.5,10);
        while(opModeIsActive())
        {
            robot.moveForTeleOp();

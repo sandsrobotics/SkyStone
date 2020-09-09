@@ -48,7 +48,7 @@ public class Robot
     // user dashboard variables
     public static double ticksPerInchForward = 191.8;
     public static double ticksPerInchSideways = 191.8;
-    public static PIDCoefficients turnPID = new PIDCoefficients(.01,.01,.01);
+    public static PIDCoefficients turnPID = new PIDCoefficients(.05,0,0);
     public static boolean emergencyStop = false;
 
     // non-user variables
@@ -260,6 +260,7 @@ public class Robot
         } else if (angleError < -180) {
             angleError = angleError + 360;
         }
+        if(debug_imu) telemetry.addData("angle error", angleError);
         return angleError;
     }
     double getCorrectionFromPID(PIDCoefficients PID, double error, double lastError, double bias,  double IntegralRange) // this method takes values from -1 to 1 and returns a value from -1 to 1(except for PID coefficients)
@@ -314,6 +315,8 @@ public class Robot
             leftBottomMotor.setPower(pow);
             rightTopMotor.setPower(-pow);
             rightBottomMotor.setPower(-pow);
+
+            telemetry.update();
 
             numOfTimesRun ++;
             if(numOfTimesRun >= maxRuntime || emergencyStop) break;
@@ -400,12 +403,26 @@ public class Robot
     }
     void moveForTeleOp()
     {
-        double[] powers = new double[4];
-        powers[0] = gamepad1.left_stick_x + gamepad1.left_stick_y + gamepad1.right_stick_x;
-        powers[1] = gamepad1.left_stick_x - gamepad1.left_stick_y + gamepad1.right_stick_x;
-        powers[2] = gamepad1.left_stick_x - gamepad1.left_stick_y - gamepad1.right_stick_x;
-        powers[3] = gamepad1.left_stick_x + gamepad1.left_stick_y - gamepad1.right_stick_x;
-        for(int i = 0; i < 4; i++) powers[i] = Math.max(Math.min(powers[i], 1), -1);
-        setMotorsToSeparatePowers(powers);
+        leftTopMotor.setPower(gamepad1.left_stick_x + gamepad1.left_stick_y + gamepad2.right_stick_x);
+        leftBottomMotor.setPower(gamepad1.left_stick_x - gamepad1.left_stick_y + gamepad2.right_stick_x);
+        rightTopMotor.setPower(gamepad1.left_stick_x - gamepad1.left_stick_y - gamepad2.right_stick_x);
+        rightBottomMotor.setPower(gamepad1.left_stick_x + gamepad1.left_stick_y - gamepad2.right_stick_x);
+    }
+    void headlessMoveForTeleOp(double offset)
+    {
+        Orientation angles = getAngles();
+        double X = gamepad1.left_stick_x;
+        double Y = gamepad1.left_stick_y;
+        double power;
+        if(Math.abs(X) > Math.abs(Y)) power = X;
+        else power = Y;
+        if(X != 0 && Y != 0)
+        {
+            double ang = Math.atan2(Y, X) * 57;
+        }
+        else if(X != 0)
+        {
+            if(X > 0) setMotorsToSeparatePowers(powerForMoveAtAngle(90 - angles.thirdAngle + offset, power));
+        }
     }
 }

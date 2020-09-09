@@ -273,6 +273,7 @@ public class Robot
 
         double D = (error - lastError);
         double output = (PID.p * error) + I + (PID.d * D) + bias;
+        if(debug_imu) telemetry.addData("correction power uncapped", output);
         return Math.max(Math.min(output, 1), -1);
     }
 
@@ -319,7 +320,7 @@ public class Robot
             telemetry.update();
 
             numOfTimesRun ++;
-            if(numOfTimesRun >= maxRuntime || emergencyStop) break;
+            if(numOfTimesRun > maxRuntime || emergencyStop) break;
         }
         stopMotors();
     }

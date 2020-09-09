@@ -404,10 +404,10 @@ public class Robot
     }
     void moveForTeleOp()
     {
-        leftTopMotor.setPower(gamepad1.left_stick_x + gamepad1.left_stick_y + gamepad2.right_stick_x);
-        leftBottomMotor.setPower(gamepad1.left_stick_x - gamepad1.left_stick_y + gamepad2.right_stick_x);
-        rightTopMotor.setPower(gamepad1.left_stick_x - gamepad1.left_stick_y - gamepad2.right_stick_x);
-        rightBottomMotor.setPower(gamepad1.left_stick_x + gamepad1.left_stick_y - gamepad2.right_stick_x);
+        leftTopMotor.setPower(gamepad1.left_stick_y + gamepad1.left_stick_x + gamepad2.right_stick_x);
+        leftBottomMotor.setPower(gamepad1.left_stick_y - gamepad1.left_stick_x + gamepad2.right_stick_x);
+        rightTopMotor.setPower(gamepad1.left_stick_y - gamepad1.left_stick_x - gamepad2.right_stick_x);
+        rightBottomMotor.setPower(gamepad1.left_stick_y + gamepad1.left_stick_x - gamepad2.right_stick_x);
     }
     void headlessMoveForTeleOp(double offset)
     {

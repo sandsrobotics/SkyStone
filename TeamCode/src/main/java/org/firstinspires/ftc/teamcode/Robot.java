@@ -44,7 +44,7 @@ public class Robot
         protected int rightBottomMotorNum = 3;
 
     // user dashboard variables
-    public static double ticksPerInchForward = 191.8;
+    public static double ticksPerInchForward = (383.6 / (3.73 * Math.PI)) * 2;
     public static double ticksPerInchSideways = 191.8;
     public static PIDCoefficients turnPID = new PIDCoefficients(2,0,0);
     public static boolean emergencyStop = false;
@@ -366,13 +366,17 @@ public class Robot
      */
     void turnToAngleSimple(double targetAngle, double tolerance, double proportional, double numberOfTimesToStayInTolerance, double maxRuntime)
     {
+        targetAngle *= .5;
+        tolerance *= .5;
+        proportional *= .5;
         double currentAngle = getAngles().thirdAngle;
         double error = findAngleError(currentAngle, targetAngle);
+
         if(Math.abs(error) > tolerance)
         {
             int numberOfTimesInTolerance = 0;
             int numberOfTimesRun = 0;
-
+            //I = 0;
             setMotorsToRunWithEncoders();
             setMotorsToBrake();
 
@@ -382,8 +386,16 @@ public class Robot
                 error = findAngleError(currentAngle, targetAngle);
                 turnWithPower(error * proportional);
 
-                if(Math.abs(error) > tolerance) numberOfTimesInTolerance ++;
-                else numberOfTimesInTolerance = 0;
+                if(Math.abs(error) < tolerance)
+                {
+                    //I = 0;
+                    numberOfTimesInTolerance++;
+                }
+                else {
+                    numberOfTimesInTolerance = 0;
+                    //if(error > 0) I += .001;
+
+                }
                 numberOfTimesRun++;
 
                 if(emergencyStop || numberOfTimesRun > maxRuntime || numberOfTimesInTolerance >= numberOfTimesToStayInTolerance) break;

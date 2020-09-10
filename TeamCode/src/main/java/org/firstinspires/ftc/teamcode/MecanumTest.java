@@ -16,14 +16,14 @@ public class MecanumTest extends LinearOpMode
     @Override
     public void runOpMode()
     {
-       robot = new Robot(hardwareMap, telemetry, gamepad1, gamepad2);
+       robot = new Robot(hardwareMap, telemetry);
        waitForStart();
+
        robot.moveForwardInches(7,.5);
-       robot.turnToAng(45,.5,50,10000);
-       robot.moveAtAngleToInches(-45,.5,10);
+       robot.turnToAngleSimple(45,1, .011, 50, 1000);
        while(opModeIsActive())
        {
-           robot.moveForTeleOp();
+           robot.moveForTeleOp(gamepad1);
        }
     }
 

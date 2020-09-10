@@ -25,8 +25,6 @@ public class Robot
     //objects
     protected HardwareMap hardwareMap;
     protected Telemetry telemetry;
-    protected Gamepad gamepad1;
-    protected Gamepad gamepad2;
     protected DcMotor leftTopMotor, leftBottomMotor, rightTopMotor, rightBottomMotor;
     private BNO055IMU imu;
     private List<DcMotor> motors;
@@ -34,7 +32,7 @@ public class Robot
 
     //user variables
         //debugs
-        protected boolean debug_motors = true;
+        protected boolean debug_methods = true;
         protected boolean debug_imu = true;
         protected boolean debug_dashboard = true; // turn this to false during competition
         protected boolean test_motors = false;
@@ -48,18 +46,16 @@ public class Robot
     // user dashboard variables
     public static double ticksPerInchForward = 191.8;
     public static double ticksPerInchSideways = 191.8;
-    public static PIDCoefficients turnPID = new PIDCoefficients(.05,0,0);
+    public static PIDCoefficients turnPID = new PIDCoefficients(2,0,0);
     public static boolean emergencyStop = false;
 
     // non-user variables
     protected double I = 0;
 
-    Robot(HardwareMap hardwareMap, Telemetry telemetry, Gamepad g1, Gamepad g2)
+    Robot(HardwareMap hardwareMap, Telemetry telemetry)
     {
         this.hardwareMap = hardwareMap;
         this.telemetry = telemetry;
-        this.gamepad1 = g1;
-        this.gamepad2 = g2;
 
         initHardware();
         if(test_motors) testMotors(200,-200);
@@ -199,7 +195,7 @@ public class Robot
             motor.setPower(power);
         }
     }
-    void setMotorsToSeparatePowers(double[] powers)
+    void setMotorsToSeparatePowersArray(double[] powers)
     {
         int i = 0;
         for(DcMotor motor: motors)
@@ -260,9 +256,10 @@ public class Robot
         } else if (angleError < -180) {
             angleError = angleError + 360;
         }
-        if(debug_imu) telemetry.addData("angle error", angleError);
+        if(debug_methods) telemetry.addData("angle error: ", angleError);
         return angleError;
     }
+    /*
     double getCorrectionFromPID(PIDCoefficients PID, double error, double lastError, double bias,  double IntegralRange) // this method takes values from -1 to 1 and returns a value from -1 to 1(except for PID coefficients)
     {
         if(Math.abs(error) <= IntegralRange)
@@ -276,6 +273,47 @@ public class Robot
         if(debug_imu) telemetry.addData("correction power uncapped", output);
         return Math.max(Math.min(output, 1), -1);
     }
+     */
+    double[] powerForMoveAtAngle(double angle, double basePower)
+    {
+        double[] arr = {basePower, basePower, basePower, basePower};
+
+        if(angle >= 0 && angle <= 90)
+        {
+            double processedAngle = (45 - angle)/45;
+            arr[1] *= processedAngle;
+            arr[2] *= processedAngle;
+        }
+        else if(angle > 90)
+        {
+            double processedAngle = (135 - angle)/45;
+            arr[0] *= processedAngle;
+            arr[1] *= -1;
+            arr[2] *= -1;
+            arr[3] *= processedAngle;
+        }
+        else if(angle >= -90 && angle < 0)
+        {
+            double processedAngle = (angle + 45)/45;
+            arr[0] *= processedAngle;
+            arr[3] *= processedAngle;
+        }
+        else
+        {
+            double processingAngle = (angle + 135)/45;
+            arr[0] *= -1;
+            arr[1] *= processingAngle;
+            arr[2] *= processingAngle;
+            arr[3] *=-1;
+        }
+        if(debug_methods)
+        {
+            telemetry.addData("moving angle: ", angle);
+            telemetry.addData("power for moving at angle: ", arr);
+            telemetry.update();
+        }
+        return arr;
+    }
 
     ////////////
     //movement//
@@ -284,7 +322,8 @@ public class Robot
     {
         moveMotorsForward((int)(ticksPerInchForward * inches), power);
     }
-    void turnToAng(double targetAngle, double tolerance, int numOfTimesToStayInTolerance, int maxRuntime)
+    /*
+    void turnToAngPID(double targetAngle, double tolerance, int numOfTimesToStayInTolerance, int maxRuntime)
     {
         I = 0;
         double currentAngle = getAngles().thirdAngle;
@@ -324,6 +363,43 @@ public class Robot
         }
         stopMotors();
     }
+     */
+    void turnToAngleSimple(double targetAngle, double tolerance, double proportional, double numberOfTimesToStayInTolerance, double maxRuntime)
+    {
+        double currentAngle = getAngles().thirdAngle;
+        double error = findAngleError(currentAngle, targetAngle);
+        if(Math.abs(error) > tolerance)
+        {
+            int numberOfTimesInTolerance = 0;
+            int numberOfTimesRun = 0;
+
+            setMotorsToRunWithEncoders();
+            setMotorsToBrake();
+
+            while(numberOfTimesInTolerance < numberOfTimesToStayInTolerance)
+            {
+                currentAngle = getAngles().thirdAngle;
+                error = findAngleError(currentAngle, targetAngle);
+                turnWithPower(error * proportional);
+
+                if(Math.abs(error) > tolerance) numberOfTimesInTolerance ++;
+                else numberOfTimesInTolerance = 0;
+                numberOfTimesRun++;
+
+                if(emergencyStop || numberOfTimesRun > maxRuntime || numberOfTimesInTolerance >= numberOfTimesToStayInTolerance) break;
+
+                if(debug_methods)
+                {
+                    telemetry.addData("current power: ", error * proportional);
+                    telemetry.addData("number of times run: ", numberOfTimesRun);
+                    telemetry.addData("number of times in tolerance: ", numberOfTimesInTolerance);
+                    telemetry.update();
+                }
+                if(debug_imu) telemetry.update();
+            }
+            stopMotors();
+        }
+    }
     void turnWithPower(double power)
     {
         leftTopMotor.setPower(power);
@@ -347,42 +423,10 @@ public class Robot
     {
         strafeSidewaysTicks((int)(ticksPerInchSideways * inches), power);
     }
-    double[] powerForMoveAtAngle(double angle, double basePower)
-    {
-        double[] arr = {basePower, basePower, basePower, basePower};
-        if(angle >= 0 && angle <= 90)
-        {
-            double processedAngle = (45 - angle)/45;
-            arr[1] *= processedAngle;
-            arr[2] *= processedAngle;
-        }
-        else if(angle > 90)
-        {
-            double processedAngle = (135 - angle)/45;
-            arr[0] *= processedAngle;
-            arr[1] *= -1;
-            arr[2] *= -1;
-            arr[3] *= processedAngle;
-        }
-        else if(angle >= -90 && angle < 0)
-        {
-            double processedAngle = (angle + 45)/45;
-            arr[0] *= processedAngle;
-            arr[3] *= processedAngle;
-        }
-        else
-        {
-            double processingAngle = (angle + 135)/45;
-            arr[0] *= -1;
-            arr[1] *= processingAngle;
-            arr[2] *= processingAngle;
-            arr[3] *=-1;
-        }
-        return arr;
-    }
+
     void moveAtAngleWithPower(double angle, double power) //in this method angle should be from -180 to 180
     {
-        setMotorsToSeparatePowers(powerForMoveAtAngle(angle,power));
+        setMotorsToSeparatePowersArray(powerForMoveAtAngle(angle,power));
     }
     void moveAtAngleToInches(double angle, double power, float inches)
     {
@@ -399,17 +443,18 @@ public class Robot
             i++;
         }
 
-        setMotorsToSeparatePowers(arr);
+        setMotorsToSeparatePowersArray(arr);
         setMotorsToRunToPosition();
     }
-    void moveForTeleOp()
+    void moveForTeleOp(Gamepad gamepad1)
     {
-        leftTopMotor.setPower(gamepad1.left_stick_y + gamepad1.left_stick_x + gamepad2.right_stick_x);
-        leftBottomMotor.setPower(gamepad1.left_stick_y - gamepad1.left_stick_x + gamepad2.right_stick_x);
-        rightTopMotor.setPower(gamepad1.left_stick_y - gamepad1.left_stick_x - gamepad2.right_stick_x);
-        rightBottomMotor.setPower(gamepad1.left_stick_y + gamepad1.left_stick_x - gamepad2.right_stick_x);
+        leftTopMotor.setPower((-gamepad1.left_stick_y) + gamepad1.left_stick_x + gamepad1.right_stick_x);
+        leftBottomMotor.setPower((-gamepad1.left_stick_y) - gamepad1.left_stick_x + gamepad1.right_stick_x);
+        rightTopMotor.setPower((-gamepad1.left_stick_y) - gamepad1.left_stick_x - gamepad1.right_stick_x);
+        rightBottomMotor.setPower((-gamepad1.left_stick_y) + gamepad1.left_stick_x - gamepad1.right_stick_x);
+
     }
-    void headlessMoveForTeleOp(double offset)
+    void headlessMoveForTeleOp(double offset, Gamepad gamepad1)
     {
         Orientation angles = getAngles();
         double X = gamepad1.left_stick_x;
@@ -423,7 +468,7 @@ public class Robot
         }
         else if(X != 0)
         {
-            if(X > 0) setMotorsToSeparatePowers(powerForMoveAtAngle(90 - angles.thirdAngle + offset, power));
+            if(X > 0) setMotorsToSeparatePowersArray(powerForMoveAtAngle(90 - angles.thirdAngle + offset, power));
         }
     }
 }

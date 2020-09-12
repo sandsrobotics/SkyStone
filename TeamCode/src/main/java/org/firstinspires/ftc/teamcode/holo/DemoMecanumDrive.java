@@ -6,7 +6,7 @@ import com.qualcomm.robotcore.util.Range;
 
 @TeleOp(name = "Demo Mecanum Drive")
 public class DemoMecanumDrive extends LinearOpMode {
-    private SandsRobot robot;
+    SandsRobot robot;
 
     @Override
     public void runOpMode() throws InterruptedException {

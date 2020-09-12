@@ -25,14 +25,15 @@ import java.util.List;
 @Config
 public class Robot
 {
-    MotorConfig motorConfig;
+    public MotorConfig motorConfig;
+    public Movement movement;
 
     //objects
     protected HardwareMap hardwareMap;
     protected Telemetry telemetry;
     protected DcMotor leftTopMotor, leftBottomMotor, rightTopMotor, rightBottomMotor;
     private BNO055IMU imu;
-    private List<DcMotor> motors;
+    protected List<DcMotor> motors;
     protected FtcDashboard dashboard;
 
     //user variables
@@ -63,7 +64,8 @@ public class Robot
 
     Robot(HardwareMap hardwareMap, Telemetry telemetry)
     {
-        motorConfig = new MotorConfig(motors);
+        motorConfig = new MotorConfig(this);
+        movement = new Movement(this);
         this.hardwareMap = hardwareMap;
         this.telemetry = telemetry;
 
@@ -284,184 +286,5 @@ public class Robot
             }
         }
         return arr;
-    }
-
-    ////////////
-    //movement//
-    ////////////
-    void moveForwardInches(float inches, double power)
-    {
-        motorConfig.moveMotorsForward((int)(ticksPerInchForward * inches), power);
-    }
-    /*
-    void turnToAngPID(double targetAngle, double tolerance, int numOfTimesToStayInTolerance, int maxRuntime)
-    {
-        I = 0;
-        double currentAngle = getAngles().thirdAngle;
-        double error = findAngleError(currentAngle, targetAngle);
-        double lastError;
-        double pow;
-        int numOfTimesInTolerance = 0;
-        int numOfTimesRun = 0;
-
-        setMotorsToRunWithEncoders();
-        setMotorsToBrake();
-
-        while(numOfTimesInTolerance < numOfTimesToStayInTolerance)
-        {
-            lastError = error;
-            currentAngle = getAngles().thirdAngle;
-            error = findAngleError(currentAngle, targetAngle);
-            pow = getCorrectionFromPID(turnPID, (error / 180), (lastError / 180), 0, .1);
-
-            if(Math.abs(error) < tolerance)
-            {
-                numOfTimesInTolerance ++;
-                I = 0;
-                pow = 0;
-            }
-            else numOfTimesInTolerance = 0;
-
-            leftTopMotor.setPower(pow);
-            leftBottomMotor.setPower(pow);
-            rightTopMotor.setPower(-pow);
-            rightBottomMotor.setPower(-pow);
-
-            telemetry.update();
-
-            numOfTimesRun ++;
-            if(numOfTimesRun > maxRuntime || emergencyStop) break;
-        }
-        stopMotors();
-    }
-     */
-    void turnToAngleSimple(double targetAngle, double tolerance, double proportional, double numberOfTimesToStayInTolerance, double maxRuntime)
-    {
-        targetAngle *= .5;
-        tolerance *= .5;
-        proportional *= .5;
-        double currentAngle = getAngles().thirdAngle;
-        double error = findAngleError(currentAngle, targetAngle);
-
-        if(Math.abs(error) > tolerance)
-        {
-            int numberOfTimesInTolerance = 0;
-            int numberOfTimesRun = 0;
-            //I = 0;
-            motorConfig.setMotorsToRunWithEncoders();
-            motorConfig.setMotorsToBrake();
-
-            while(numberOfTimesInTolerance < numberOfTimesToStayInTolerance)
-            {
-                startTelemetry();
-                currentAngle = getAngles().thirdAngle;
-                error = findAngleError(currentAngle, targetAngle);
-                turnWithPower(error * turnPID.p);
-
-                if(Math.abs(error) < tolerance)
-                {
-                    //I = 0;
-                    numberOfTimesInTolerance++;
-                }
-                else {
-                    numberOfTimesInTolerance = 0;
-                    //if(error > 0) I += .001;
-
-                }
-                numberOfTimesRun++;
-
-                if(emergencyStop || numberOfTimesRun > maxRuntime || numberOfTimesInTolerance >= numberOfTimesToStayInTolerance) break;
-
-                if(debug_methods)
-                {
-                    if(debug_telemetry)
-                    {
-                        telemetry.addData("current power: ", error * proportional);
-                        telemetry.addData("number of times run: ", numberOfTimesRun);
-                        telemetry.addData("number of times in tolerance: ", numberOfTimesInTolerance);
-                    }
-                    if(debug_dashboard)
-                    {
-                        packet.put("current power: ", error * proportional);
-                        packet.put("number of times run: ", numberOfTimesRun);
-                        packet.put("number of times in tolerance: ", numberOfTimesInTolerance);
-                    }
-                }
-                updateTelemetry();
-                sendTelemetry();
-            }
-            motorConfig.stopMotors();
-        }
-    }
-    void turnWithPower(double power)
-    {
-        leftTopMotor.setPower(power);
-        leftBottomMotor.setPower(power);
-        rightTopMotor.setPower(-power);
-        rightBottomMotor.setPower(-power);
-    }
-    void strafeSidewaysWithPower(double power)
-    {
-        leftTopMotor.setPower(power);
-        leftBottomMotor.setPower(-power);
-        rightTopMotor.setPower(-power);
-        rightBottomMotor.setPower(power);
-    }
-    void strafeSidewaysTicks(int ticks, double power)
-    {
-        int[] arr = {ticks, -ticks, -ticks, ticks};
-        motorConfig.moveMotorForwardSeparateAmount(arr,0);
-    }
-    void strafeSidewaysInches(float inches, double power)
-    {
-        strafeSidewaysTicks((int)(ticksPerInchSideways * inches), power);
-    }
-
-    void moveAtAngleWithPower(double angle, double power) //in this method angle should be from -180 to 180
-    {
-        motorConfig.setMotorsToSeparatePowersArray(powerForMoveAtAngle(angle,power));
-    }
-    void moveAtAngleToInches(double angle, double power, float inches)
-    {
-        double[] arr = powerForMoveAtAngle(angle, power);
-        double forwardAmount = Math.abs(Math.abs(angle) - 90)/90;
-        double sideWaysAmount = 1 - forwardAmount;
-        int totalTicks = (int)((inches*ticksPerInchForward*forwardAmount) + (inches*ticksPerInchSideways*sideWaysAmount));
-
-        int i = 0;
-        for(DcMotor motor:motors)
-        {
-            motor.setTargetPosition((int)(totalTicks * arr[i]));
-            arr[i] = Math.abs(arr[i]);
-            i++;
-        }
-
-        motorConfig.setMotorsToSeparatePowersArray(arr);
-        motorConfig.setMotorsToRunToPosition();
-    }
-    void moveForTeleOp(Gamepad gamepad1)
-    {
-        leftTopMotor.setPower((-gamepad1.left_stick_y) + gamepad1.left_stick_x + gamepad1.right_stick_x);
-        leftBottomMotor.setPower((-gamepad1.left_stick_y) - gamepad1.left_stick_x + gamepad1.right_stick_x);
-        rightTopMotor.setPower((-gamepad1.left_stick_y) - gamepad1.left_stick_x - gamepad1.right_stick_x);
-        rightBottomMotor.setPower((-gamepad1.left_stick_y) + gamepad1.left_stick_x - gamepad1.right_stick_x);
-
-    }
-    void headlessMoveForTeleOp(Gamepad gamepad1, double offset)
-    {
-        Orientation angles = getAngles();
-        double X = gamepad1.left_stick_x;
-        double Y = gamepad1.left_stick_y;
-        double power;
-        if(Math.abs(X) > Math.abs(Y)) power = X;
-        else power = Y;
-        if(X != 0 && Y != 0)
-        {
-            double ang = Math.atan2(Y, X) * 57;
-        }
-        else if(X != 0)
-        {
-            if(X > 0) motorConfig.setMotorsToSeparatePowersArray(powerForMoveAtAngle(90 - angles.thirdAngle + offset, power));
-        }
     }
 }

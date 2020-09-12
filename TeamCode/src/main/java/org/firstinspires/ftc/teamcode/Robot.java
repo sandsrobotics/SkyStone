@@ -1,6 +1,8 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.config.Config;
+import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -20,6 +22,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
 import java.util.Arrays;
 import java.util.List;
 
+@Config
 public class Robot
 {
     //objects
@@ -32,9 +35,11 @@ public class Robot
 
     //user variables
         //debugs
+        protected boolean debug_telemetry = true;
+        protected boolean debug_dashboard = true; // turn this to false during competition
+
         protected boolean debug_methods = true;
         protected boolean debug_imu = true;
-        protected boolean debug_dashboard = true; // turn this to false during competition
         protected boolean debug_motors = true;
         protected boolean test_motors = false;
         //other
@@ -52,6 +57,7 @@ public class Robot
 
     // non-user variables
     protected double I = 0;
+    TelemetryPacket packet = null;
 
     Robot(HardwareMap hardwareMap, Telemetry telemetry)
     {
@@ -254,24 +260,56 @@ public class Robot
     {
         return imu.getAcceleration();
     }
+    void startTelemetry()
+    {
+        if(debug_dashboard)
+        {
+            packet = new TelemetryPacket();
+        }
+    }
     void updateTelemetry()
     {
             if(debug_imu) {
-                telemetry.addData("angles: ", getAngles());
-                telemetry.addData("rotation: ", getAngles().thirdAngle);
-                telemetry.addData("velocity: ", getVelocity());
-                telemetry.addData("angular velocity: ", getAngularVelocity());
-                telemetry.addData("acceleration", getAcceleration());
+                if(debug_telemetry)
+                {
+                    telemetry.addData("angles: ", getAngles());
+                    telemetry.addData("rotation: ", getAngles().thirdAngle);
+                    telemetry.addData("velocity: ", getVelocity());
+                    telemetry.addData("angular velocity: ", getAngularVelocity());
+                    telemetry.addData("acceleration", getAcceleration());
+                }
+                if(debug_dashboard)
+                {
+                    packet.put("angles: ", getAngles());
+                    packet.put("rotation: ", getAngles().thirdAngle);
+                    packet.put("velocity: ", getVelocity());
+                    packet.put("angular velocity: ", getAngularVelocity());
+                    packet.put("acceleration", getAcceleration());
+                }
             }
             if(debug_motors)
             {
+                if(debug_telemetry)
+                {
                 telemetry.addData("motor powers: ", getMotorPowers());
                 telemetry.addData("motor positions:", getMotorPositions());
+                }
+                if(debug_dashboard)
+                {
+                    packet.put("motor powers: ", getMotorPowers());
+                    packet.put("motor positions:", getMotorPositions());
+                }
             }
-            if(debug_motors || debug_methods || debug_imu)
-            {
-                telemetry.update();
-            }
+
+
+    }
+    void sendTelemetry()
+    {
+        if(debug_motors || debug_methods || debug_imu)
+        {
+            if(debug_dashboard) dashboard.sendTelemetryPacket(packet);
+            if(debug_telemetry) telemetry.update();
+        }
     }
     ////////////////
     //calculations//
@@ -289,7 +327,11 @@ public class Robot
         } else if (angleError < -180) {
             angleError = angleError + 360;
         }
-        if(debug_methods) telemetry.addData("angle error: ", angleError);
+        if(debug_methods)
+        {
+            if(debug_telemetry)telemetry.addData("angle error: ", angleError);
+            if(debug_dashboard)packet.put("angle error: ", angleError);
+        }
         return angleError;
     }
     /*
@@ -341,8 +383,16 @@ public class Robot
         }
         if(debug_methods)
         {
-            telemetry.addData("moving angle: ", angle);
-            telemetry.addData("power for moving at angle: ", arr);
+            if(debug_telemetry)
+            {
+                telemetry.addData("moving angle: ", angle);
+                telemetry.addData("power for moving at angle: ", arr);
+            }
+            if(debug_dashboard)
+            {
+                packet.put("moving angle: ", angle);
+                packet.put("power for moving at angle: ", arr);
+            }
         }
         return arr;
     }
@@ -414,6 +464,7 @@ public class Robot
 
             while(numberOfTimesInTolerance < numberOfTimesToStayInTolerance)
             {
+                startTelemetry();
                 currentAngle = getAngles().thirdAngle;
                 error = findAngleError(currentAngle, targetAngle);
                 turnWithPower(error * proportional);
@@ -434,10 +485,21 @@ public class Robot
 
                 if(debug_methods)
                 {
-                    telemetry.addData("current power: ", error * proportional);
-                    telemetry.addData("number of times run: ", numberOfTimesRun);
-                    telemetry.addData("number of times in tolerance: ", numberOfTimesInTolerance);
+                    if(debug_telemetry)
+                    {
+                        telemetry.addData("current power: ", error * proportional);
+                        telemetry.addData("number of times run: ", numberOfTimesRun);
+                        telemetry.addData("number of times in tolerance: ", numberOfTimesInTolerance);
+                    }
+                    if(debug_dashboard)
+                    {
+                        packet.put("current power: ", error * proportional);
+                        packet.put("number of times run: ", numberOfTimesRun);
+                        packet.put("number of times in tolerance: ", numberOfTimesInTolerance);
+                    }
                 }
+                updateTelemetry();
+                sendTelemetry();
             }
             stopMotors();
         }

@@ -35,6 +35,7 @@ public class Robot
         protected boolean debug_methods = true;
         protected boolean debug_imu = true;
         protected boolean debug_dashboard = true; // turn this to false during competition
+        protected boolean debug_motors = true;
         protected boolean test_motors = false;
         //other
         protected boolean[] flipMotorDir = {true, true, false, false};
@@ -204,6 +205,28 @@ public class Robot
             i++;
         }
     }
+    double[] getMotorPowers()
+    {
+        double[] arr = new double[4];
+        int i = 0;
+        for(DcMotor motor:motors)
+        {
+            arr[i] = motor.getPower();
+            i++;
+        }
+        return arr;
+    }
+    int[] getMotorPositions()
+    {
+        int[] arr = new int[4];
+        int i = 0;
+        for(DcMotor motor:motors)
+        {
+            arr[i] = motor.getCurrentPosition();
+            i++;
+        }
+        return arr;
+    }
     void testMotors(int maxTicks, int minTicks)
     {
         resetEncoders();
@@ -217,29 +240,39 @@ public class Robot
     /////////////
     Orientation getAngles()
     {
-        Orientation angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.DEGREES);
-        if(debug_imu) telemetry.addData("angles: ", angles);
-        return angles;
+        return imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.DEGREES);
     }
     Velocity getVelocity()
     {
-        Velocity velocity = imu.getVelocity();
-        if(debug_imu) telemetry.addData("velocity: ", velocity);
-        return velocity;
+        return imu.getVelocity();
     }
     AngularVelocity getAngularVelocity()
     {
-        AngularVelocity angularVelocity = imu.getAngularVelocity();
-        if(debug_imu) telemetry.addData("angular velocity: ", angularVelocity);
-        return angularVelocity;
+        return imu.getAngularVelocity();
     }
     Acceleration getAcceleration()
     {
-        Acceleration acceleration = imu.getAcceleration();
-        if(debug_imu) telemetry.addData("acceleration", acceleration);
-        return acceleration;
+        return imu.getAcceleration();
     }
-
+    void updateTelemetry()
+    {
+            if(debug_imu) {
+                telemetry.addData("angles: ", getAngles());
+                telemetry.addData("rotation: ", getAngles().thirdAngle);
+                telemetry.addData("velocity: ", getVelocity());
+                telemetry.addData("angular velocity: ", getAngularVelocity());
+                telemetry.addData("acceleration", getAcceleration());
+            }
+            if(debug_motors)
+            {
+                telemetry.addData("motor powers: ", getMotorPowers());
+                telemetry.addData("motor positions:", getMotorPositions());
+            }
+            if(debug_motors || debug_methods || debug_imu)
+            {
+                telemetry.update();
+            }
+    }
     ////////////////
     //calculations//
     ////////////////
@@ -310,7 +343,6 @@ public class Robot
         {
             telemetry.addData("moving angle: ", angle);
             telemetry.addData("power for moving at angle: ", arr);
-            telemetry.update();
         }
         return arr;
     }
@@ -405,9 +437,7 @@ public class Robot
                     telemetry.addData("current power: ", error * proportional);
                     telemetry.addData("number of times run: ", numberOfTimesRun);
                     telemetry.addData("number of times in tolerance: ", numberOfTimesInTolerance);
-                    telemetry.update();
                 }
-                if(debug_imu) telemetry.update();
             }
             stopMotors();
         }

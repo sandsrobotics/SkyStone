@@ -18,6 +18,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
+import org.firstinspires.ftc.teamcode.holo.MotorConfig;
 
 import java.util.Arrays;
 import java.util.List;
@@ -25,6 +26,8 @@ import java.util.List;
 @Config
 public class Robot
 {
+    MotorConfig motorConfig;
+
     //objects
     protected HardwareMap hardwareMap;
     protected Telemetry telemetry;
@@ -61,6 +64,7 @@ public class Robot
 
     Robot(HardwareMap hardwareMap, Telemetry telemetry)
     {
+        motorConfig = new MotorConfig(motors);
         this.hardwareMap = hardwareMap;
         this.telemetry = telemetry;
 
@@ -117,128 +121,13 @@ public class Robot
     ////////////////
     //motor config//
     ////////////////
-    void resetEncoders()
-    {
-        for(DcMotor motor: motors)
-        {
-            motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        }
-    }
-    void setMotorsToCoast()
-    {
-        for(DcMotor motor: motors)
-        {
-            motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        }
-    }
-    void setMotorsToBrake()
-    {
-        for(DcMotor motor: motors)
-        {
-            motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        }
-    }
-    void setMotorsToRunWithoutEncoders()
-    {
-        for(DcMotor motor: motors)
-        {
-            motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        }
-    }
-    void setMotorsToRunWithEncoders()
-    {
-        for(DcMotor motor: motors)
-        {
-            motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        }
-    }
-    void setMotorsToRunToPosition()
-    {
-        for(DcMotor motor: motors)
-        {
-            motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        }
-    }
-    void setMotorsToPosition(int ticks, double power)
-    {
-        for(DcMotor motor: motors)
-        {
-            motor.setTargetPosition(ticks);
-            motor.setPower(power);
-            motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        }
-    }
-    void moveMotorsForward(int ticks, double power)
-    {
-        for(DcMotor motor: motors)
-        {
-            motor.setTargetPosition(motor.getCurrentPosition() + ticks);
-            motor.setPower(power);
-            motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        }
-    }
-    void moveMotorForwardSeparateAmount(int[] ticks, double power)
-    {
-        int i = 0;
-        for(DcMotor motor: motors)
-        {
-            motor.setTargetPosition(ticks[i]);
-            motor.setPower(power);
-            motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            i++;
-        }
-    }
-    void stopMotors()
-    {
-        for(DcMotor motor: motors)
-        {
-            motor.setPower(0);
-        }
-    }
-    void setMotorsToPower(double power)
-    {
-        for(DcMotor motor: motors)
-        {
-            motor.setPower(power);
-        }
-    }
-    void setMotorsToSeparatePowersArray(double[] powers)
-    {
-        int i = 0;
-        for(DcMotor motor: motors)
-        {
-            motor.setPower(powers[i]);
-            i++;
-        }
-    }
-    double[] getMotorPowers()
-    {
-        double[] arr = new double[4];
-        int i = 0;
-        for(DcMotor motor:motors)
-        {
-            arr[i] = motor.getPower();
-            i++;
-        }
-        return arr;
-    }
-    int[] getMotorPositions()
-    {
-        int[] arr = new int[4];
-        int i = 0;
-        for(DcMotor motor:motors)
-        {
-            arr[i] = motor.getCurrentPosition();
-            i++;
-        }
-        return arr;
-    }
+
     void testMotors(int maxTicks, int minTicks)
     {
-        resetEncoders();
-        setMotorsToPosition(maxTicks,.5);
-        setMotorsToPosition(minTicks,.5);
-        setMotorsToPosition(0,.5);
+        motorConfig.resetEncoders();
+        motorConfig.setMotorsToPosition(maxTicks,.5);
+        motorConfig.setMotorsToPosition(minTicks,.5);
+        motorConfig.setMotorsToPosition(0,.5);
     }
 
     /////////////
@@ -291,13 +180,13 @@ public class Robot
             {
                 if(debug_telemetry)
                 {
-                telemetry.addData("motor powers: ", getMotorPowers());
-                telemetry.addData("motor positions:", getMotorPositions());
+                telemetry.addData("motor powers: ", motorConfig.getMotorPowers());
+                telemetry.addData("motor positions:", motorConfig.getMotorPositions());
                 }
                 if(debug_dashboard)
                 {
-                    packet.put("motor powers: ", getMotorPowers());
-                    packet.put("motor positions:", getMotorPositions());
+                    packet.put("motor powers: ", motorConfig.getMotorPowers());
+                    packet.put("motor positions:", motorConfig.getMotorPositions());
                 }
             }
 
@@ -403,7 +292,7 @@ public class Robot
     ////////////
     void moveForwardInches(float inches, double power)
     {
-        moveMotorsForward((int)(ticksPerInchForward * inches), power);
+        motorConfig.moveMotorsForward((int)(ticksPerInchForward * inches), power);
     }
     /*
     void turnToAngPID(double targetAngle, double tolerance, int numOfTimesToStayInTolerance, int maxRuntime)
@@ -460,8 +349,8 @@ public class Robot
             int numberOfTimesInTolerance = 0;
             int numberOfTimesRun = 0;
             //I = 0;
-            setMotorsToRunWithEncoders();
-            setMotorsToBrake();
+            motorConfig.setMotorsToRunWithEncoders();
+            motorConfig.setMotorsToBrake();
 
             while(numberOfTimesInTolerance < numberOfTimesToStayInTolerance)
             {
@@ -502,7 +391,7 @@ public class Robot
                 updateTelemetry();
                 sendTelemetry();
             }
-            stopMotors();
+            motorConfig.stopMotors();
         }
     }
     void turnWithPower(double power)
@@ -522,7 +411,7 @@ public class Robot
     void strafeSidewaysTicks(int ticks, double power)
     {
         int[] arr = {ticks, -ticks, -ticks, ticks};
-        moveMotorForwardSeparateAmount(arr,0);
+        motorConfig.moveMotorForwardSeparateAmount(arr,0);
     }
     void strafeSidewaysInches(float inches, double power)
     {
@@ -531,7 +420,7 @@ public class Robot
 
     void moveAtAngleWithPower(double angle, double power) //in this method angle should be from -180 to 180
     {
-        setMotorsToSeparatePowersArray(powerForMoveAtAngle(angle,power));
+        motorConfig.setMotorsToSeparatePowersArray(powerForMoveAtAngle(angle,power));
     }
     void moveAtAngleToInches(double angle, double power, float inches)
     {
@@ -548,8 +437,8 @@ public class Robot
             i++;
         }
 
-        setMotorsToSeparatePowersArray(arr);
-        setMotorsToRunToPosition();
+        motorConfig.setMotorsToSeparatePowersArray(arr);
+        motorConfig.setMotorsToRunToPosition();
     }
     void moveForTeleOp(Gamepad gamepad1)
     {
@@ -573,7 +462,7 @@ public class Robot
         }
         else if(X != 0)
         {
-            if(X > 0) setMotorsToSeparatePowersArray(powerForMoveAtAngle(90 - angles.thirdAngle + offset, power));
+            if(X > 0) motorConfig.setMotorsToSeparatePowersArray(powerForMoveAtAngle(90 - angles.thirdAngle + offset, power));
         }
     }
 }

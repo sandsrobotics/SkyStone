@@ -22,7 +22,10 @@ public class MecanumTest extends LinearOpMode
        robot.turnToAngleSimple(45,1, .011, 50, 1000);
        while(opModeIsActive())
        {
+           robot.startTelemetry();
            robot.moveForTeleOp(gamepad1);
+           robot.updateTelemetry();
+           robot.sendTelemetry();
        }
     }
 

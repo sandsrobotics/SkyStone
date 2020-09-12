@@ -52,7 +52,7 @@ public class Robot
     // user dashboard variables
     public static double ticksPerInchForward = (383.6 / (3.73 * Math.PI)) * 2;
     public static double ticksPerInchSideways = 191.8;
-    public static PIDCoefficients turnPID = new PIDCoefficients(2,0,0);
+    public static PIDCoefficients turnPID = new PIDCoefficients(.02,0,0);
     public static boolean emergencyStop = false;
 
     // non-user variables
@@ -352,6 +352,7 @@ public class Robot
     double[] powerForMoveAtAngle(double angle, double basePower)
     {
         double[] arr = {basePower, basePower, basePower, basePower};
+        double sidewaysMultiplier = ticksPerInchSideways/ticksPerInchForward;
 
         if(angle >= 0 && angle <= 90)
         {
@@ -362,7 +363,7 @@ public class Robot
         else if(angle > 90)
         {
             double processedAngle = (135 - angle)/45;
-            arr[0] *= processedAngle;
+            arr[0] *= processedAngle * sidewaysMultiplier;
             arr[1] *= -1;
             arr[2] *= -1;
             arr[3] *= processedAngle;
@@ -467,7 +468,7 @@ public class Robot
                 startTelemetry();
                 currentAngle = getAngles().thirdAngle;
                 error = findAngleError(currentAngle, targetAngle);
-                turnWithPower(error * proportional);
+                turnWithPower(error * turnPID.p);
 
                 if(Math.abs(error) < tolerance)
                 {
@@ -558,7 +559,7 @@ public class Robot
         rightBottomMotor.setPower((-gamepad1.left_stick_y) + gamepad1.left_stick_x - gamepad1.right_stick_x);
 
     }
-    void headlessMoveForTeleOp(double offset, Gamepad gamepad1)
+    void headlessMoveForTeleOp(Gamepad gamepad1, double offset)
     {
         Orientation angles = getAngles();
         double X = gamepad1.left_stick_x;

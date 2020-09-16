@@ -69,7 +69,7 @@ public class Robot
         this.telemetry = telemetry;
 
         initHardware();
-        if(test_motors) testMotors(200,-200);
+        if(test_motors) motorConfig.testMotors(200,-200);
     }
 
     void initHardware()
@@ -117,19 +117,6 @@ public class Robot
     }
 
     //------------------My Methods------------------//
-
-    ////////////////
-    //motor config//
-    ////////////////
-
-    void testMotors(int maxTicks, int minTicks)
-    {
-        motorConfig.resetEncoders();
-        motorConfig.setMotorsToPosition(maxTicks,.5);
-        motorConfig.setMotorsToPosition(minTicks,.5);
-        motorConfig.setMotorsToPosition(0,.5);
-    }
-
     /////////////
     //telemetry//
     /////////////

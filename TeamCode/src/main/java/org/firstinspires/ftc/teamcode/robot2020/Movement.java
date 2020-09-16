@@ -34,7 +34,7 @@ public class Movement
             lastError = error;
             currentAngle = getAngles().thirdAngle;
             error = findAngleError(currentAngle, targetAngle);
-            pow = getCorrectionFromPID(turnPID, (error / 180), (lastError / 180), 0, .1);
+            pow = getCorrectionFromPID(turnPID, error, lastError, 0, .1);
 
             if(Math.abs(error) < tolerance)
             {
@@ -57,11 +57,8 @@ public class Movement
         stopMotors();
     }
      */
-    void turnToAngleSimple(double targetAngle, double tolerance, double proportional, double numberOfTimesToStayInTolerance, double maxRuntime)
+    void turnToAngleSimple(double targetAngle, double tolerance, double numberOfTimesToStayInTolerance, double maxRuntime)
     {
-        targetAngle *= .5;
-        tolerance *= .5;
-        proportional *= .5;
         double currentAngle = robot.getAngles().thirdAngle;
         double error = robot.findAngleError(currentAngle, targetAngle);
 
@@ -98,13 +95,13 @@ public class Movement
                 {
                     if(robot.debug_telemetry)
                     {
-                        robot.telemetry.addData("current power: ", error * proportional);
+                        robot.telemetry.addData("current power: ", error * Robot.turnPID.p);
                         robot.telemetry.addData("number of times run: ", numberOfTimesRun);
                         robot.telemetry.addData("number of times in tolerance: ", numberOfTimesInTolerance);
                     }
                     if(robot.debug_dashboard)
                     {
-                        robot.packet.put("current power: ", error * proportional);
+                        robot.packet.put("current power: ", error * Robot.turnPID.p);
                         robot.packet.put("number of times run: ", numberOfTimesRun);
                         robot.packet.put("number of times in tolerance: ", numberOfTimesInTolerance);
                     }

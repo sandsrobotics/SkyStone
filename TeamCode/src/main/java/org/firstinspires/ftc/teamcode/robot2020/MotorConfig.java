@@ -126,4 +126,11 @@ public class MotorConfig
         }
         return arr;
     }
+    void testMotors(int maxTicks, int minTicks)
+    {
+        resetEncoders();
+        setMotorsToPosition(maxTicks,.5);
+        setMotorsToPosition(minTicks,.5);
+        setMotorsToPosition(0,.5);
+    }
 }

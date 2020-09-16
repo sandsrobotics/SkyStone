@@ -2,8 +2,6 @@ package org.firstinspires.ftc.teamcode.robot2020;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
 
-import org.firstinspires.ftc.teamcode.robot2020.Robot;
-
 public class MotorConfig
 {
 

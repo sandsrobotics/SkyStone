@@ -3,9 +3,6 @@ package org.firstinspires.ftc.teamcode.robot2020;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
-
-import org.firstinspires.ftc.teamcode.robot2020.Robot;
-
 @TeleOp(name = "test2020")
 public class MecanumTest extends LinearOpMode
 {

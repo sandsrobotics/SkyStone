@@ -59,8 +59,11 @@ public class Movement
      */
     void turnToAngleSimple(double targetAngle, double tolerance, double numberOfTimesToStayInTolerance, double maxRuntime)
     {
+        
+        robot.startTelemetry();
         double currentAngle = robot.getAngles().thirdAngle;
         double error = robot.findAngleError(currentAngle, targetAngle);
+        robot.sendTelemetry();
 
         if(Math.abs(error) > tolerance)
         {

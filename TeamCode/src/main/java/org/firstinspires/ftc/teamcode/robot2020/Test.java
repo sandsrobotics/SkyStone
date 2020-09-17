@@ -34,7 +34,7 @@ public class Test extends LinearOpMode
             robot.addTelemetryDouble("angle error: ", error);
             robot.addTelemetryDouble("last angle error: ", lastError);
             robot.addTelemetryDouble("PID calculated power: ",robot.getCorrectionFromPID(error, lastError, 0, .2));
-            robot.addTelemetryDouble("P calculated power: ", error * Robot.turnPID.p);
+            robot.addTelemetryDouble("P calculated power: ", error * Movement.turnPID.p);
             robot.sendTelemetry();
         }
     }

@@ -47,7 +47,7 @@ public class Robot
     //objects
     protected HardwareMap hardwareMap;
     protected Telemetry telemetry;
-    private BNO055IMU imu;
+    protected BNO055IMU imu;
     protected List<DcMotor> motors;
     protected FtcDashboard dashboard;
 

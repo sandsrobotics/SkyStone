@@ -26,6 +26,7 @@ public class Robot
 {
     public MotorConfig motorConfig;
     public Movement movement;
+    public Vision vision;
 
     //objects
     protected HardwareMap hardwareMap;
@@ -65,6 +66,7 @@ public class Robot
     {
         motorConfig = new MotorConfig(this);
         movement = new Movement(this);
+        vision = new Vision(this);
         this.hardwareMap = hardwareMap;
         this.telemetry = telemetry;
 

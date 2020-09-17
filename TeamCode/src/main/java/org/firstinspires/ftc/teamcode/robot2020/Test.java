@@ -5,7 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 @Config
-@TeleOp(name = "test turn functions")
+@TeleOp(name = "test turn functions output")
 public class Test extends LinearOpMode
 {
     Robot robot;

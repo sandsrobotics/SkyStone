@@ -24,6 +24,22 @@ import java.util.List;
 @Config
 public class Robot
 {
+    /////////////
+    //user data//
+    /////////////
+    //debug
+    protected boolean debug_telemetry = true;
+    protected boolean debug_dashboard = true; // turn this to false during competition
+
+    protected boolean debug_methods = true;
+    protected boolean debug_imu = true;
+    protected boolean debug_motors = true;
+    protected boolean test_motors = false;
+
+    //user dashboard variables
+    public static boolean emergencyStop = false;
+
+    //other classes
     public MotorConfig motorConfig;
     public Movement movement;
     public Vision vision;
@@ -31,34 +47,11 @@ public class Robot
     //objects
     protected HardwareMap hardwareMap;
     protected Telemetry telemetry;
-    protected DcMotor leftTopMotor, leftBottomMotor, rightTopMotor, rightBottomMotor;
     private BNO055IMU imu;
     protected List<DcMotor> motors;
     protected FtcDashboard dashboard;
 
-    //user variables
-        //debugs
-        protected boolean debug_telemetry = true;
-        protected boolean debug_dashboard = true; // turn this to false during competition
-
-        protected boolean debug_methods = true;
-        protected boolean debug_imu = true;
-        protected boolean debug_motors = true;
-        protected boolean test_motors = false;
-        //other
-        protected boolean[] flipMotorDir = {true, true, false, false};
-        protected int leftTopMotorNum = 0;
-        protected int leftBottomMotorNum = 2;
-        protected int rightTopMotorNum = 1;
-        protected int rightBottomMotorNum = 3;
-
-    // user dashboard variables
-    public static double ticksPerInchForward = (383.6 / (3.73 * Math.PI)) * 2;
-    public static double ticksPerInchSideways = 191.8;
-    public static PIDCoefficients turnPID = new PIDCoefficients(.02,0,0);
-    public static boolean emergencyStop = false;
-
-    // non-user variables
+    //other
     protected double I = 0;
     TelemetryPacket packet;
 
@@ -71,33 +64,13 @@ public class Robot
         this.telemetry = telemetry;
 
         initHardware();
+        motorConfig.initMotors();
+        vision.initVuforia();
         if(test_motors) motorConfig.testMotors(200,-200);
     }
 
     void initHardware()
     {
-        //////////
-        //motors//
-        //////////
-        leftTopMotor = hardwareMap.dcMotor.get("motor" + leftTopMotorNum);
-        leftBottomMotor = hardwareMap.dcMotor.get("motor" + leftBottomMotorNum);
-        rightTopMotor = hardwareMap.dcMotor.get("motor" + rightTopMotorNum);
-        rightBottomMotor = hardwareMap.dcMotor.get("motor" + rightBottomMotorNum);
-        motors = Arrays.asList(leftTopMotor, leftBottomMotor, rightTopMotor, rightBottomMotor);
-
-        //////////////
-        //motor init//
-        //////////////
-        int i = 0;
-        for(DcMotor motor:motors)
-        {
-            motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-            motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-            if(flipMotorDir[i]) motor.setDirection(DcMotor.Direction.REVERSE);
-            i++;
-        }
-
         ///////
         //imu//
         ///////
@@ -227,12 +200,12 @@ public class Robot
     {
         if(Math.abs(error) <= IntegralRange)
         {
-            I += error * turnPID.i;
+            I += error * Movement.turnPID.i;
             I = Math.max(Math.min(I, 1), -1);
         }
 
         double D = (error - lastError);
-        double output = (turnPID.p * error) + I + (turnPID.d * D) + bias;
+        double output = (Movement.turnPID.p * error) + I + (Movement.turnPID.d * D) + bias;
         if(debug_methods)
         {
             if(debug_telemetry) telemetry.addData("correction power uncapped", output);
@@ -244,7 +217,7 @@ public class Robot
     double[] powerForMoveAtAngle(double angle, double basePower)
     {
         double[] arr = {basePower, basePower, basePower, basePower};
-        double sidewaysMultiplier = ticksPerInchSideways/ticksPerInchForward;
+        double sidewaysMultiplier = Movement.ticksPerInchSideways/Movement.ticksPerInchForward;
 
         if(angle >= 0 && angle <= 90)
         {

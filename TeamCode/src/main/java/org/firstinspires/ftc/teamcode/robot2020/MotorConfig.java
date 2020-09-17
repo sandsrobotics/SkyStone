@@ -2,13 +2,49 @@ package org.firstinspires.ftc.teamcode.robot2020;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
 
+import java.util.Arrays;
+import java.util.List;
+
 public class MotorConfig
 {
+    //////////////////
+    //user variables//
+    //////////////////
+    protected boolean[] flipMotorDir = {true, true, false, false};
+    protected int leftTopMotorNum = 0;
+    protected int leftBottomMotorNum = 2;
+    protected int rightTopMotorNum = 1;
+    protected int rightBottomMotorNum = 3;
 
+    protected DcMotor leftTopMotor, leftBottomMotor, rightTopMotor, rightBottomMotor;
+    protected List<DcMotor> motors;
+
+    //other class
     Robot robot;
+
     public MotorConfig(Robot robot)
     {
         this.robot = robot;
+    }
+
+    public void initMotors()
+    {
+        leftTopMotor = robot.hardwareMap.dcMotor.get("motor" + leftTopMotorNum);
+        leftBottomMotor = robot.hardwareMap.dcMotor.get("motor" + leftBottomMotorNum);
+        rightTopMotor = robot.hardwareMap.dcMotor.get("motor" + rightTopMotorNum);
+        rightBottomMotor = robot.hardwareMap.dcMotor.get("motor" + rightBottomMotorNum);
+        motors = Arrays.asList(leftTopMotor, leftBottomMotor, rightTopMotor, rightBottomMotor);
+
+        int i = 0;
+        for(DcMotor motor:motors)
+        {
+            motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            if(flipMotorDir[i]) motor.setDirection(DcMotor.Direction.REVERSE);
+            i++;
+        }
+
     }
     public void resetEncoders()
     {

@@ -18,7 +18,7 @@ public class Movement
     /*
     void turnToAngPID(double targetAngle, double tolerance, int numOfTimesToStayInTolerance, int maxRuntime)
     {
-        I = 0;
+        double I = 0;
         double currentAngle = getAngles().thirdAngle;
         double error = findAngleError(currentAngle, targetAngle);
         double lastError;

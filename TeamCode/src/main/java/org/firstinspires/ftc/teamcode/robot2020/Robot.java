@@ -179,6 +179,16 @@ public class Robot
 
 
     }
+    void addTelemetryDouble(String cap, double val)
+    {
+        if(debug_dashboard) packet.put(cap,val);
+        if(debug_telemetry) telemetry.addData(cap,val);
+    }
+    void addTelemetryString(String cap, String val)
+    {
+        if(debug_dashboard) packet.put(cap, val);
+        if(debug_telemetry) telemetry.addData(cap, val);
+    }
     void sendTelemetry()
     {
         if(debug_motors || debug_methods || debug_imu)
@@ -210,21 +220,25 @@ public class Robot
         }
         return angleError;
     }
-    /*
-    double getCorrectionFromPID(PIDCoefficients PID, double error, double lastError, double bias,  double IntegralRange) // this method takes values from -1 to 1 and returns a value from -1 to 1(except for PID coefficients)
+
+    double getCorrectionFromPID(double error, double lastError, double bias,  double IntegralRange) // this method takes values from -180 to 180 and returns a value from -1 to 1
     {
         if(Math.abs(error) <= IntegralRange)
         {
-            I += error * PID.i;
+            I += error * turnPID.i;
             I = Math.max(Math.min(I, 1), -1);
         }
 
         double D = (error - lastError);
-        double output = (PID.p * error) + I + (PID.d * D) + bias;
-        if(debug_imu) telemetry.addData("correction power uncapped", output);
+        double output = (turnPID.p * error) + I + (turnPID.d * D) + bias;
+        if(debug_methods)
+        {
+            if(debug_telemetry) telemetry.addData("correction power uncapped", output);
+            if(debug_dashboard) packet.put("correction power uncapped", output);
+        }
         return Math.max(Math.min(output, 1), -1);
     }
-     */
+
     double[] powerForMoveAtAngle(double angle, double basePower)
     {
         double[] arr = {basePower, basePower, basePower, basePower};

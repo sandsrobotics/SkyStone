@@ -21,15 +21,16 @@ public class Test extends LinearOpMode
 
         waitForStart();
 
+        robot.startTelemetry();
         error = robot.findAngleError(robot.getAngles().thirdAngle, targetAngle);
         robot.I = 0;
-
+        robot.sendTelemetry();
 
         while(opModeIsActive())
         {
+            robot.startTelemetry();
             lastError = error;
             error = robot.findAngleError(robot.getAngles().thirdAngle, targetAngle);
-            robot.startTelemetry();
             robot.updateTelemetry();
             robot.addTelemetryDouble("angle error: ", error);
             robot.addTelemetryDouble("last angle error: ", lastError);

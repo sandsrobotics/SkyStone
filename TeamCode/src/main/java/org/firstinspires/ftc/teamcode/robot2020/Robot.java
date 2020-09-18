@@ -48,7 +48,6 @@ public class Robot
     protected HardwareMap hardwareMap;
     protected Telemetry telemetry;
     protected BNO055IMU imu;
-    protected List<DcMotor> motors;
     protected FtcDashboard dashboard;
 
     //other
@@ -95,22 +94,23 @@ public class Robot
     /////////////
     //telemetry//
     /////////////
-    Orientation getAngles()
-    {
-        return imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.DEGREES);
-    }
+    Orientation getAngles() { return imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.DEGREES); }
+
     Velocity getVelocity()
     {
         return imu.getVelocity();
     }
+
     AngularVelocity getAngularVelocity()
     {
         return imu.getAngularVelocity();
     }
+
     Acceleration getAcceleration()
     {
         return imu.getAcceleration();
     }
+
     void startTelemetry()
     {
         if(debug_dashboard)
@@ -118,6 +118,7 @@ public class Robot
             packet = new TelemetryPacket();
         }
     }
+
     void updateTelemetry()
     {
             if(debug_imu) {
@@ -154,24 +155,25 @@ public class Robot
 
 
     }
+
     void addTelemetryDouble(String cap, double val)
     {
         if(debug_dashboard) packet.put(cap,val);
         if(debug_telemetry) telemetry.addData(cap,val);
     }
+
     void addTelemetryString(String cap, String val)
     {
         if(debug_dashboard) packet.put(cap, val);
         if(debug_telemetry) telemetry.addData(cap, val);
     }
+
     void sendTelemetry()
     {
-        if(debug_motors || debug_methods || debug_imu)
-        {
-            if(debug_dashboard) dashboard.sendTelemetryPacket(packet);
-            if(debug_telemetry) telemetry.update();
-        }
+        if(debug_dashboard) dashboard.sendTelemetryPacket(packet);
+        if(debug_telemetry) telemetry.update();
     }
+
     ////////////////
     //calculations//
     ////////////////
@@ -188,11 +190,6 @@ public class Robot
         } else if (angleError < -180) {
             angleError = angleError + 360;
         }
-        if(debug_methods)
-        {
-            if(debug_telemetry)telemetry.addData("angle error: ", angleError);
-            if(debug_dashboard)packet.put("angle error: ", angleError);
-        }
         return angleError;
     }
 
@@ -206,11 +203,6 @@ public class Robot
 
         double D = (error - lastError);
         double output = (Movement.turnPID.p * error) + I + (Movement.turnPID.d * D) + bias;
-        if(debug_methods)
-        {
-            if(debug_telemetry) telemetry.addData("correction power uncapped", output);
-            if(debug_dashboard) packet.put("correction power uncapped", output);
-        }
         return Math.max(Math.min(output, 1), -1);
     }
 
@@ -228,7 +220,7 @@ public class Robot
         else if(angle > 90)
         {
             double processedAngle = (135 - angle)/45;
-            arr[0] *= processedAngle * sidewaysMultiplier;
+            arr[0] *= processedAngle;
             arr[1] *= -1;
             arr[2] *= -1;
             arr[3] *= processedAngle;
@@ -246,19 +238,6 @@ public class Robot
             arr[1] *= processingAngle;
             arr[2] *= processingAngle;
             arr[3] *=-1;
-        }
-        if(debug_methods)
-        {
-            if(debug_telemetry)
-            {
-                telemetry.addData("moving angle: ", angle);
-                telemetry.addData("power for moving at angle: ", arr);
-            }
-            if(debug_dashboard)
-            {
-                packet.put("moving angle: ", angle);
-                packet.put("power for moving at angle: ", arr);
-            }
         }
         return arr;
     }

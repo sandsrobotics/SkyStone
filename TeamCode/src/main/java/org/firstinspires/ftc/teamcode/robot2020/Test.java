@@ -16,6 +16,7 @@ public class Test extends LinearOpMode
     public void runOpMode()
     {
         robot = new Robot(hardwareMap, telemetry);
+        robot.debug_methods = false;
         double lastError;
         double error;
 
@@ -24,11 +25,9 @@ public class Test extends LinearOpMode
         robot.startTelemetry();
         error = robot.findAngleError(robot.getAngles().thirdAngle, targetAngle);
         robot.I = 0;
-        robot.sendTelemetry();
 
         while(opModeIsActive())
         {
-            robot.startTelemetry();
             lastError = error;
             error = robot.findAngleError(robot.getAngles().thirdAngle, targetAngle);
             robot.updateTelemetry();

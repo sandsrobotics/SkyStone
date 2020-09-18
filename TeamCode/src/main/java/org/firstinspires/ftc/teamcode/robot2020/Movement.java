@@ -72,8 +72,6 @@ public class Movement
      */
     void turnToAngleSimple(double targetAngle, double tolerance, double numberOfTimesToStayInTolerance, double maxRuntime)
     {
-        
-        robot.startTelemetry();
         double currentAngle = robot.getAngles().thirdAngle;
         double error = robot.findAngleError(currentAngle, targetAngle);
         robot.sendTelemetry();
@@ -88,7 +86,6 @@ public class Movement
 
             while(numberOfTimesInTolerance < numberOfTimesToStayInTolerance)
             {
-                robot.startTelemetry();
                 currentAngle = robot.getAngles().thirdAngle;
                 error = robot.findAngleError(currentAngle, targetAngle);
                 turnWithPower(error * turnPID.p);
@@ -164,7 +161,7 @@ public class Movement
         int totalTicks = (int)((inches*ticksPerInchForward*forwardAmount) + (inches*ticksPerInchSideways*sideWaysAmount));
 
         int i = 0;
-        for(DcMotor motor:robot.motors)
+        for(DcMotor motor: robot.motorConfig.motors)
         {
             motor.setTargetPosition((int)(totalTicks * arr[i]));
             arr[i] = Math.abs(arr[i]);

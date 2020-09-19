@@ -28,26 +28,26 @@ public class Movement
     {
         robot.motorConfig.moveMotorsForward((int)(ticksPerInchForward * inches), power);
     }
-    /*
+
     void turnToAngPID(double targetAngle, double tolerance, int numOfTimesToStayInTolerance, int maxRuntime)
     {
         double I = 0;
-        double currentAngle = getAngles().thirdAngle;
-        double error = findAngleError(currentAngle, targetAngle);
+        double currentAngle = robot.getAngles().thirdAngle;
+        double error = robot.findAngleError(currentAngle, targetAngle);
         double lastError;
         double pow;
         int numOfTimesInTolerance = 0;
         int numOfTimesRun = 0;
 
-        setMotorsToRunWithEncoders();
-        setMotorsToBrake();
+        //robot.motorConfig.setMotorsToRunWithEncoders();
+        //robot.motorConfig.setMotorsToBrake();
 
         while(numOfTimesInTolerance < numOfTimesToStayInTolerance)
         {
             lastError = error;
-            currentAngle = getAngles().thirdAngle;
-            error = findAngleError(currentAngle, targetAngle);
-            pow = getCorrectionFromPID(turnPID, error, lastError, 0, .1);
+            currentAngle = robot.getAngles().thirdAngle;
+            error = robot.findAngleError(currentAngle, targetAngle);
+            pow = robot.getCorrectionFromPID(error, lastError,0,.1);
 
             if(Math.abs(error) < tolerance)
             {
@@ -57,19 +57,17 @@ public class Movement
             }
             else numOfTimesInTolerance = 0;
 
-            leftTopMotor.setPower(pow);
-            leftBottomMotor.setPower(pow);
-            rightTopMotor.setPower(-pow);
-            rightBottomMotor.setPower(-pow);
-
-            telemetry.update();
+            robot.motorConfig.leftTopMotor.setPower(pow);
+            robot.motorConfig.leftBottomMotor.setPower(pow);
+            robot.motorConfig.rightTopMotor.setPower(-pow);
+            robot.motorConfig.rightBottomMotor.setPower(-pow);
 
             numOfTimesRun ++;
-            if(numOfTimesRun > maxRuntime || emergencyStop) break;
+            if(numOfTimesRun > maxRuntime || Robot.emergencyStop) break;
         }
-        stopMotors();
+        robot.motorConfig.stopMotors();
     }
-     */
+
     void turnToAngleSimple(double targetAngle, double tolerance, double numberOfTimesToStayInTolerance, double maxRuntime)
     {
         double currentAngle = robot.getAngles().thirdAngle;
@@ -92,13 +90,11 @@ public class Movement
 
                 if(Math.abs(error) < tolerance)
                 {
-                    //I = 0;
+                    robot.I = 0;
                     numberOfTimesInTolerance++;
                 }
                 else {
                     numberOfTimesInTolerance = 0;
-                    //if(error > 0) I += .001;
-
                 }
                 numberOfTimesRun++;
 

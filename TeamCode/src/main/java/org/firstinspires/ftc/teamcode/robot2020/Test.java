@@ -5,7 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 @Config
-@TeleOp(name = "test turn functions output")
+@TeleOp(name = "test turn functions output v1.0")
 public class Test extends LinearOpMode
 {
     Robot robot;
@@ -17,24 +17,30 @@ public class Test extends LinearOpMode
     {
         robot = new Robot(hardwareMap, telemetry);
         robot.debug_methods = false;
-        double lastError;
+        robot.debug_imu = false;
+        robot.debug_motors = false;
+        //double lastError;
         double error;
 
         waitForStart();
 
         robot.startTelemetry();
-        error = robot.findAngleError(robot.getAngles().thirdAngle, targetAngle);
-        robot.I = 0;
+        //error = robot.findAngleError(robot.getAngles().thirdAngle, targetAngle);
+        //robot.I = 0;
+
+        robot.movement.moveAtAngleToInches(45,.5,20);
 
         while(opModeIsActive())
         {
-            lastError = error;
+            //lastError = error;
             error = robot.findAngleError(robot.getAngles().thirdAngle, targetAngle);
-            robot.updateTelemetry();
+            //robot.updateTelemetry();
+            robot.addTelemetryDouble("current angle: ", robot.getAngles().thirdAngle);
             robot.addTelemetryDouble("angle error: ", error);
-            robot.addTelemetryDouble("last angle error: ", lastError);
-            robot.addTelemetryDouble("PID calculated power: ",robot.getCorrectionFromPID(error, lastError, 0, .2));
+            //robot.addTelemetryDouble("last angle error: ", lastError);
+            //robot.addTelemetryDouble("PID calculated power: ",robot.getCorrectionFromPID(error, lastError, 0, .2));
             robot.addTelemetryDouble("P calculated power: ", error * Movement.turnPID.p);
+            robot.movement.moveForTeleOp(gamepad1);
             robot.sendTelemetry();
         }
     }

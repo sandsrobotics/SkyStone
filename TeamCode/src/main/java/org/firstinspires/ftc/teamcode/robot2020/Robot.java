@@ -18,6 +18,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -239,6 +240,37 @@ public class Robot
             arr[2] *= processingAngle;
             arr[3] *=-1;
         }
+        return arr;
+    }
+    double[] getXYFromAngle(double angle)
+    {
+        // deg to rad
+        angle /= 57.29577951308232;
+
+        //rad to X,Y
+        double[] XY = new double[2];
+        XY[0] = Math.sin(angle);
+        XY[1] = Math.cos(angle);
+        double total = Math.abs(XY[0]) + Math.abs(XY[1]);
+        XY[0] /= total;
+        XY[1] /= total;
+
+        return XY;
+    }
+    double[] powerForMoveAtAngleV2(double angle, double basePower)
+    {
+        double[] arr;
+        arr = getXYFromAngle(angle);
+        double x = arr[0];
+        double y = arr[1];
+        arr = new double[4];
+
+        //set power with X,Y
+        arr[0] = (y + x) * basePower;
+        arr[1] = (y - x) * basePower;
+        arr[2] = (y - x) * basePower;
+        arr[3] = (y + x) * basePower;
+
         return arr;
     }
 }

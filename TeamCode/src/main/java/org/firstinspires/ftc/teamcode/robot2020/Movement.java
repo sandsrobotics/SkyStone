@@ -12,8 +12,8 @@ public class Movement
     //////////////////
     //user variables//
     //////////////////
-    public static double ticksPerInchForward = (383.6 / (3.73 * Math.PI)) * 2;
-    public static double ticksPerInchSideways = 191.8;
+    public static double ticksPerInchForward = (383.6 / (3.73 * Math.PI));
+    public static double ticksPerInchSideways = (383.6 / (3.73 * Math.PI));
     public static PIDCoefficients turnPID = new PIDCoefficients(.02,0,0);
 
     //other class
@@ -24,9 +24,16 @@ public class Movement
         this.robot = robot;
     }
 
-    void moveForwardInches(float inches, double power)
+    ////////////////
+    //turn methods//
+    ////////////////
+
+    void turnWithPower(double power)
     {
-        robot.motorConfig.moveMotorsForward((int)(ticksPerInchForward * inches), power);
+        robot.motorConfig.leftTopMotor.setPower(power);
+        robot.motorConfig.leftBottomMotor.setPower(power);
+        robot.motorConfig.rightTopMotor.setPower(-power);
+        robot.motorConfig.rightBottomMotor.setPower(-power);
     }
 
     void turnToAngPID(double targetAngle, double tolerance, int numOfTimesToStayInTolerance, int maxRuntime)
@@ -72,15 +79,15 @@ public class Movement
     {
         double currentAngle = robot.getAngles().thirdAngle;
         double error = robot.findAngleError(currentAngle, targetAngle);
-        robot.sendTelemetry();
 
         if(Math.abs(error) > tolerance)
         {
             int numberOfTimesInTolerance = 0;
             int numberOfTimesRun = 0;
+
             //I = 0;
-            robot.motorConfig.setMotorsToRunWithEncoders();
-            robot.motorConfig.setMotorsToBrake();
+            //robot.motorConfig.setMotorsToRunWithEncoders();
+            //robot.motorConfig.setMotorsToBrake();
 
             while(numberOfTimesInTolerance < numberOfTimesToStayInTolerance)
             {
@@ -104,12 +111,14 @@ public class Movement
                 {
                     if(robot.debug_telemetry)
                     {
+                        robot.telemetry.addData("angle error: ", error);
                         robot.telemetry.addData("current power: ", error * turnPID.p);
                         robot.telemetry.addData("number of times run: ", numberOfTimesRun);
                         robot.telemetry.addData("number of times in tolerance: ", numberOfTimesInTolerance);
                     }
                     if(robot.debug_dashboard)
                     {
+                        robot.packet.put("angle error: ", error);
                         robot.packet.put("current power: ", error * turnPID.p);
                         robot.packet.put("number of times run: ", numberOfTimesRun);
                         robot.packet.put("number of times in tolerance: ", numberOfTimesInTolerance);
@@ -121,13 +130,11 @@ public class Movement
             robot.motorConfig.stopMotors();
         }
     }
-    void turnWithPower(double power)
-    {
-        robot.motorConfig.leftTopMotor.setPower(power);
-        robot.motorConfig.leftBottomMotor.setPower(power);
-        robot.motorConfig.rightTopMotor.setPower(-power);
-        robot.motorConfig.rightBottomMotor.setPower(-power);
-    }
+
+    //////////////////
+    //strafe methods//
+    //////////////////
+
     void strafeSidewaysWithPower(double power)
     {
         robot.motorConfig.leftTopMotor.setPower(power);
@@ -135,46 +142,61 @@ public class Movement
         robot.motorConfig.rightTopMotor.setPower(-power);
         robot.motorConfig.rightBottomMotor.setPower(power);
     }
+
     void strafeSidewaysTicks(int ticks, double power)
     {
         int[] arr = {ticks, -ticks, -ticks, ticks};
         robot.motorConfig.moveMotorForwardSeparateAmount(arr,0);
     }
+
     void strafeSidewaysInches(float inches, double power)
     {
         strafeSidewaysTicks((int)(ticksPerInchSideways * inches), power);
+    }
+
+    ////////////////
+    //move methods//
+    ////////////////
+
+    void moveForwardInches(float inches, double power)
+    {
+        robot.motorConfig.moveMotorsForward((int)(ticksPerInchForward * inches), power);
     }
 
     void moveAtAngleWithPower(double angle, double power) //in this method angle should be from -180 to 180
     {
         robot.motorConfig.setMotorsToSeparatePowersArray(robot.powerForMoveAtAngle(angle,power));
     }
+
     void moveAtAngleToInches(double angle, double power, float inches)
     {
-        double[] arr = robot.powerForMoveAtAngle(angle, power);
-        double forwardAmount = Math.abs(Math.abs(angle) - 90)/90;
-        double sideWaysAmount = 1 - forwardAmount;
-        int totalTicks = (int)((inches*ticksPerInchForward*forwardAmount) + (inches*ticksPerInchSideways*sideWaysAmount));
+        double[] arr = robot.powerForMoveAtAngleV2(angle, power);
+
+        int totalTicks = (int)((inches*ticksPerInchForward*robot.getXYFromAngle(angle)[1]) + (inches*ticksPerInchSideways*robot.getXYFromAngle(angle)[0]));
 
         int i = 0;
         for(DcMotor motor: robot.motorConfig.motors)
         {
             motor.setTargetPosition((int)(totalTicks * arr[i]));
-            arr[i] = Math.abs(arr[i]);
             i++;
         }
 
         robot.motorConfig.setMotorsToSeparatePowersArray(arr);
         robot.motorConfig.setMotorsToRunToPosition();
     }
+
+    //////////
+    //teleOp//
+    //////////
+
     void moveForTeleOp(Gamepad gamepad1)
     {
         robot.motorConfig.leftTopMotor.setPower((-gamepad1.left_stick_y) + gamepad1.left_stick_x + gamepad1.right_stick_x);
         robot.motorConfig.leftBottomMotor.setPower((-gamepad1.left_stick_y) - gamepad1.left_stick_x + gamepad1.right_stick_x);
         robot.motorConfig.rightTopMotor.setPower((-gamepad1.left_stick_y) - gamepad1.left_stick_x - gamepad1.right_stick_x);
         robot.motorConfig.rightBottomMotor.setPower((-gamepad1.left_stick_y) + gamepad1.left_stick_x - gamepad1.right_stick_x);
-
     }
+
     void headlessMoveForTeleOp(Gamepad gamepad1, double offset)
     {
         Orientation angles = robot.getAngles();

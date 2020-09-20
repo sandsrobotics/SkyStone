@@ -28,7 +28,7 @@ public class Test extends LinearOpMode
         //error = robot.findAngleError(robot.getAngles().thirdAngle, targetAngle);
         //robot.I = 0;
 
-        robot.movement.moveAtAngleToInches(45,.5,20);
+        robot.movement.moveForwardInches(12,.5);
 
         while(opModeIsActive())
         {

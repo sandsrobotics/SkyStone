@@ -108,7 +108,7 @@ public class MotorConfig
         int i = 0;
         for(DcMotor motor: motors)
         {
-            motor.setTargetPosition(ticks[i]);
+            motor.setTargetPosition(motor.getCurrentPosition() + ticks[i]);
             motor.setPower(power);
             motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             i++;

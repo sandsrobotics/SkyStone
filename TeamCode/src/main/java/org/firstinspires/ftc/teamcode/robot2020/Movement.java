@@ -12,9 +12,9 @@ public class Movement
     //////////////////
     //user variables//
     //////////////////
-    public static double ticksPerInchForward = 200;
-    public static double ticksPerInchSideways = 134.4;
-    public static PIDCoefficients turnPID = new PIDCoefficients(.02,0,0);
+    public static double ticksPerInchForward = 44;
+    public static double ticksPerInchSideways = 88;
+    public static PIDCoefficients turnPID = new PIDCoefficients(.025,0,0);
 
     //other class
     Robot robot;
@@ -132,18 +132,11 @@ public class Movement
     //strafe methods//
     //////////////////
 
-    void strafeSidewaysWithPower(double power)
-    {
-        robot.motorConfig.leftTopMotor.setPower(power);
-        robot.motorConfig.leftBottomMotor.setPower(-power);
-        robot.motorConfig.rightTopMotor.setPower(-power);
-        robot.motorConfig.rightBottomMotor.setPower(power);
-    }
-
     void strafeSidewaysTicks(int ticks, double power)
     {
         int[] arr = {ticks, -ticks, -ticks, ticks};
-        robot.motorConfig.moveMotorForwardSeparateAmount(arr,0);
+        robot.motorConfig.moveMotorForwardSeparateAmount(arr,power);
+        waitForMotorsToFinish();
     }
 
     void strafeSidewaysInches(double inches, double power)
@@ -168,14 +161,15 @@ public class Movement
 
     void moveAtAngleToInches(double angle, double power, double inches)
     {
-        double[] arr = robot.powerForMoveAtAngleV2(angle, power);
+        double[] arr = robot.powerForMoveAtAngleV2(-angle, power);
 
-        int totalTicks = (int)((inches*ticksPerInchForward*robot.getXYFromAngle(angle)[1]) + (inches*ticksPerInchSideways*robot.getXYFromAngle(angle)[0]));
+        int totalTicks = (int)((inches*ticksPerInchForward*robot.getXYFromAngle(-angle)[1]) + (inches*ticksPerInchSideways*robot.getXYFromAngle(-angle)[0]));
 
         int i = 0;
         for(DcMotor motor: robot.motorConfig.motors)
         {
-            motor.setTargetPosition((int)(totalTicks * arr[i]));
+            motor.setTargetPosition(motor.getCurrentPosition() + (int)(totalTicks * arr[i]));
+            arr[i] = Math.abs(arr[i]);
             i++;
         }
 

@@ -55,15 +55,19 @@ public class Robot
 
     //other
     protected double I = 0;
+    protected Gamepad gamepad1;
+    protected Gamepad gamepad2;
     TelemetryPacket packet;
 
-    Robot(HardwareMap hardwareMap, Telemetry telemetry)
+    Robot(HardwareMap hardwareMap, Telemetry telemetry, Gamepad gamepad1, Gamepad gamepad2)
     {
         motorConfig = new MotorConfig(this);
         movement = new Movement(this);
         vision = new Vision(this);
         this.hardwareMap = hardwareMap;
         this.telemetry = telemetry;
+        this.gamepad1 = gamepad1;
+        this.gamepad2 = gamepad2;
 
         initHardware();
         motorConfig.initMotors();

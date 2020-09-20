@@ -67,7 +67,7 @@ public class Movement
             robot.motorConfig.rightBottomMotor.setPower(-pow);
 
             numOfTimesRun ++;
-            if(numOfTimesRun > maxRuntime || Robot.emergencyStop) break;
+            if(numOfTimesRun > maxRuntime || Robot.emergencyStop || robot.gamepad1.back || robot.gamepad2.back) break;
         }
         robot.motorConfig.stopMotors();
     }
@@ -102,7 +102,7 @@ public class Movement
                 }
                 numberOfTimesRun++;
 
-                if(Robot.emergencyStop || numberOfTimesRun > maxRuntime || numberOfTimesInTolerance >= numberOfTimesToStayInTolerance) break;
+                if(Robot.emergencyStop || numberOfTimesRun > maxRuntime || robot.gamepad1.back || robot.gamepad2.back) break;
 
                 if(robot.debug_methods)
                 {
@@ -220,6 +220,6 @@ public class Movement
 
     void waitForMotorsToFinish()
     {
-        while((robot.motorConfig.leftTopMotor.isBusy() || robot.motorConfig.leftBottomMotor.isBusy() || robot.motorConfig.rightTopMotor.isBusy() || robot.motorConfig.rightBottomMotor.isBusy())&& !Robot.emergencyStop){}
+        while((robot.motorConfig.leftTopMotor.isBusy() || robot.motorConfig.leftBottomMotor.isBusy() || robot.motorConfig.rightTopMotor.isBusy() || robot.motorConfig.rightBottomMotor.isBusy()) && !Robot.emergencyStop && !robot.gamepad1.back && !robot.gamepad2.back){}
     }
 }

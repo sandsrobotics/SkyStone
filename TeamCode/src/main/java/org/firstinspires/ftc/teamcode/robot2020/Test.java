@@ -19,7 +19,12 @@ public class Test extends LinearOpMode
     @Override
     public void runOpMode()
     {
-        robot = new Robot(hardwareMap, telemetry);
+        robot = new Robot(hardwareMap, telemetry, gamepad1, gamepad2);
+
+        robot.motorConfig.setMotorsToRunWithEncoders();
+        robot.motorConfig.resetEncoders();
+        robot.motorConfig.setMotorsToBrake();
+
         robot.debug_methods = false;
         robot.debug_imu = false;
         robot.debug_motors = false;

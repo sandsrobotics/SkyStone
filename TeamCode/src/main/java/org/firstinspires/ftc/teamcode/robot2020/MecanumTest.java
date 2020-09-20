@@ -17,7 +17,7 @@ public class MecanumTest extends LinearOpMode
     @Override
     public void runOpMode()
     {
-       robot = new Robot(hardwareMap, telemetry);
+       robot = new Robot(hardwareMap, telemetry, gamepad1, gamepad2);
 
        waitForStart();
 

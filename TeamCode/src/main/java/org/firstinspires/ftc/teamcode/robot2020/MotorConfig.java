@@ -38,9 +38,6 @@ public class MotorConfig
         int i = 0;
         for(DcMotor motor:motors)
         {
-            motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-            motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
             if(flipMotorDir[i]) motor.setDirection(DcMotor.Direction.REVERSE);
             i++;
         }

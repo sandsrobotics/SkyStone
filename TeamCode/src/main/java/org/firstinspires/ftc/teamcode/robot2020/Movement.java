@@ -12,8 +12,8 @@ public class Movement
     //////////////////
     //user variables//
     //////////////////
-    public static double ticksPerInchForward = (383.6 / (3.73 * Math.PI));
-    public static double ticksPerInchSideways = (383.6 / (3.73 * Math.PI));
+    public static double ticksPerInchForward = 200;
+    public static double ticksPerInchSideways = 134.4;
     public static PIDCoefficients turnPID = new PIDCoefficients(.02,0,0);
 
     //other class
@@ -45,9 +45,6 @@ public class Movement
         double pow;
         int numOfTimesInTolerance = 0;
         int numOfTimesRun = 0;
-
-        //robot.motorConfig.setMotorsToRunWithEncoders();
-        //robot.motorConfig.setMotorsToBrake();
 
         while(numOfTimesInTolerance < numOfTimesToStayInTolerance)
         {
@@ -149,7 +146,7 @@ public class Movement
         robot.motorConfig.moveMotorForwardSeparateAmount(arr,0);
     }
 
-    void strafeSidewaysInches(float inches, double power)
+    void strafeSidewaysInches(double inches, double power)
     {
         strafeSidewaysTicks((int)(ticksPerInchSideways * inches), power);
     }
@@ -158,9 +155,10 @@ public class Movement
     //move methods//
     ////////////////
 
-    void moveForwardInches(float inches, double power)
+    void moveForwardInches(double inches, double power)
     {
         robot.motorConfig.moveMotorsForward((int)(ticksPerInchForward * inches), power);
+        waitForMotorsToFinish();
     }
 
     void moveAtAngleWithPower(double angle, double power) //in this method angle should be from -180 to 180
@@ -168,7 +166,7 @@ public class Movement
         robot.motorConfig.setMotorsToSeparatePowersArray(robot.powerForMoveAtAngle(angle,power));
     }
 
-    void moveAtAngleToInches(double angle, double power, float inches)
+    void moveAtAngleToInches(double angle, double power, double inches)
     {
         double[] arr = robot.powerForMoveAtAngleV2(angle, power);
 
@@ -183,6 +181,7 @@ public class Movement
 
         robot.motorConfig.setMotorsToSeparatePowersArray(arr);
         robot.motorConfig.setMotorsToRunToPosition();
+        waitForMotorsToFinish();
     }
 
     //////////
@@ -213,5 +212,14 @@ public class Movement
         {
             if(X > 0) robot.motorConfig.setMotorsToSeparatePowersArray(robot.powerForMoveAtAngle(90 - angles.thirdAngle + offset, power));
         }
+    }
+
+    /////////
+    //other//
+    /////////
+
+    void waitForMotorsToFinish()
+    {
+        while((robot.motorConfig.leftTopMotor.isBusy() || robot.motorConfig.leftBottomMotor.isBusy() || robot.motorConfig.rightTopMotor.isBusy() || robot.motorConfig.rightBottomMotor.isBusy())&& !Robot.emergencyStop){}
     }
 }

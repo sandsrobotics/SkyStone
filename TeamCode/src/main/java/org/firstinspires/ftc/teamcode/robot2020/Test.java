@@ -11,6 +11,10 @@ public class Test extends LinearOpMode
     Robot robot;
 
     public static double targetAngle = 45;
+    public static double distanceForward = 1;
+    public static double distanceSideways = 4;
+    public static double moveAngle = 45;
+    public static double moveDistance = 3;
 
     @Override
     public void runOpMode()
@@ -19,27 +23,32 @@ public class Test extends LinearOpMode
         robot.debug_methods = false;
         robot.debug_imu = false;
         robot.debug_motors = false;
-        //double lastError;
-        double error;
 
         waitForStart();
 
         robot.startTelemetry();
-        //error = robot.findAngleError(robot.getAngles().thirdAngle, targetAngle);
-        //robot.I = 0;
-
-        robot.movement.moveForwardInches(12,.5);
 
         while(opModeIsActive())
         {
-            //lastError = error;
-            error = robot.findAngleError(robot.getAngles().thirdAngle, targetAngle);
-            //robot.updateTelemetry();
-            robot.addTelemetryDouble("current angle: ", robot.getAngles().thirdAngle);
-            robot.addTelemetryDouble("angle error: ", error);
-            //robot.addTelemetryDouble("last angle error: ", lastError);
-            //robot.addTelemetryDouble("PID calculated power: ",robot.getCorrectionFromPID(error, lastError, 0, .2));
-            robot.addTelemetryDouble("P calculated power: ", error * Movement.turnPID.p);
+            if(gamepad1.a)
+            {
+                robot.movement.turnToAngleSimple(targetAngle,.5,50,1000);
+            }
+            if(gamepad1.b)
+            {
+                robot.movement.moveForwardInches(distanceForward,.5);
+                robot.motorConfig.setMotorsToRunWithEncoders();
+            }
+            if(gamepad1.x)
+            {
+                robot.movement.strafeSidewaysInches(distanceSideways,.5);
+                robot.motorConfig.setMotorsToRunWithEncoders();
+            }
+            if(gamepad1.y)
+            {
+                robot.movement.moveAtAngleToInches(moveAngle,.5,moveDistance);
+                robot.motorConfig.setMotorsToRunWithEncoders();
+            }
             robot.movement.moveForTeleOp(gamepad1);
             robot.sendTelemetry();
         }

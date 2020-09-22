@@ -212,7 +212,7 @@ public class Robot
         double output = (Movement.turnPID.p * error) + I + (Movement.turnPID.d * D) + bias;
         return Math.max(Math.min(output, 1), -1);
     }
-
+/*
     double[] powerForMoveAtAngle(double angle, double basePower)
     {
         double[] arr = {basePower, basePower, basePower, basePower};
@@ -248,10 +248,16 @@ public class Robot
         }
         return arr;
     }
+
+ */
+    double getAngleFromXY(double X, double Y)
+    {
+        return Math.atan2(Y, X)*(180 / Math.PI);
+    }
     double[] getXYFromAngle(double angle)
     {
         // deg to rad
-        angle /= 57.29577951308232;
+        angle /= (180 / Math.PI);
 
         //rad to X,Y
         double[] XY = new double[2];
@@ -263,6 +269,7 @@ public class Robot
 
         return XY;
     }
+
     double[] powerForMoveAtAngleV2(double angle, double basePower)
     {
         double[] arr;

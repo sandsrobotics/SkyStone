@@ -156,7 +156,7 @@ public class Movement
 
     void moveAtAngleWithPower(double angle, double power) //in this method angle should be from -180 to 180
     {
-        robot.motorConfig.setMotorsToSeparatePowersArray(robot.powerForMoveAtAngle(angle,power));
+        robot.motorConfig.setMotorsToSeparatePowersArray(robot.powerForMoveAtAngleV2(angle,power));
     }
 
     void moveAtAngleToInches(double angle, double power, double inches)
@@ -192,20 +192,12 @@ public class Movement
 
     void headlessMoveForTeleOp(Gamepad gamepad1, double offset)
     {
-        Orientation angles = robot.getAngles();
-        double X = gamepad1.left_stick_x;
-        double Y = gamepad1.left_stick_y;
-        double power;
-        if(Math.abs(X) > Math.abs(Y)) power = X;
-        else power = Y;
-        if(X != 0 && Y != 0)
-        {
-            double ang = Math.atan2(Y, X) * 57;
-        }
-        else if(X != 0)
-        {
-            if(X > 0) robot.motorConfig.setMotorsToSeparatePowersArray(robot.powerForMoveAtAngle(90 - angles.thirdAngle + offset, power));
-        }
+        double curAngle = robot.getAngles().thirdAngle;
+        double gamepadAngle = robot.getAngleFromXY(gamepad1.left_stick_x, gamepad1.left_stick_y);
+        double error = robot.findAngleError(curAngle,gamepadAngle) + offset;
+        double power = Math.max(gamepad1.left_stick_x, gamepad1.left_stick_y);
+
+        robot.motorConfig.setMotorsToSeparatePowersArray(robot.powerForMoveAtAngleV2(error,power));
     }
 
     /////////

@@ -5,7 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 @Config
-@TeleOp(name = "test move functions v1.2.4")
+@TeleOp(name = "test move functions v1.2.6")
 public class Test extends LinearOpMode
 {
     Robot robot;
@@ -16,6 +16,7 @@ public class Test extends LinearOpMode
     public static double distanceSideways = 12;
     public static double moveAngle = 45;
     public static double moveDistance = 12;
+    private boolean runningHeadless = false;
 
     @Override
     public void runOpMode()
@@ -29,6 +30,8 @@ public class Test extends LinearOpMode
         robot.debug_methods = false;
         robot.debug_imu = false;
         robot.debug_motors = false;
+
+
 
         waitForStart();
 
@@ -52,10 +55,19 @@ public class Test extends LinearOpMode
             }
             if(gamepad1.y)
             {
-                robot.movement.moveAtAngleToInches(moveAngle,power,moveDistance);
-                robot.motorConfig.setMotorsToRunWithEncoders();
+                runningHeadless = !runningHeadless;
             }
-            robot.movement.moveForTeleOp(gamepad1);
+            if(!runningHeadless)
+            {
+                robot.movement.moveForTeleOp(gamepad1);
+                robot.addTelemetryString("headless mode: ", "disabled");
+            }
+            else
+            {
+                robot.movement.headlessMoveForTeleOp(gamepad1,0);
+                robot.addTelemetryString("headless mode: ", "enabled");
+            }
+
             robot.addTelemetryDouble("angle: ", robot.getAngles().thirdAngle);
             robot.sendTelemetry();
         }

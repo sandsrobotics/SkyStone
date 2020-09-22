@@ -47,12 +47,12 @@ public class Movement
             if(Math.abs(error) < tolerance)
             {
                 numOfTimesInTolerance ++;
-                I = 0;
+                //I = 0;
                 pow = 0;
             }
             else numOfTimesInTolerance = 0;
 
-            moveRobot(0,0,pow);
+            robot.motorConfig.setMotorsToSeparatePowersArray(moveRobotPowers(0,0,pow));
 
             numOfTimesRun ++;
             if(numOfTimesRun > maxRuntime || Robot.emergencyStop || robot.gamepad1.back || robot.gamepad2.back) break;
@@ -78,7 +78,7 @@ public class Movement
             {
                 currentAngle = robot.getAngles().thirdAngle;
                 error = robot.findAngleError(currentAngle, targetAngle);
-                moveRobot(0,0,error * turnPID.p);
+                robot.motorConfig.setMotorsToSeparatePowersArray(moveRobotPowers(0,0,error * turnPID.p));
 
                 if(Math.abs(error) < tolerance)
                 {
@@ -169,7 +169,7 @@ public class Movement
     //////////
     void moveForTeleOp(Gamepad gamepad1)
     {
-        moveRobot(gamepad1.left_stick_x, -gamepad1.left_stick_y, gamepad1.right_stick_x);
+        robot.motorConfig.setMotorsToSeparatePowersArray(moveRobotPowers(gamepad1.left_stick_x, -gamepad1.left_stick_y, gamepad1.right_stick_x));
     }
 
     void headlessMoveForTeleOp( Gamepad gamepad1, double offset)
@@ -181,15 +181,15 @@ public class Movement
         double[] XY = robot.getXYFromAngle(error);
         XY[0] *= power;
         XY[1] *= power;
-        moveRobot(XY[0],XY[1],gamepad1.right_stick_x);
+        robot.motorConfig.setMotorsToSeparatePowersArray(moveRobotPowers(XY[0],XY[1],gamepad1.right_stick_x));
     }
 
     /////////
     //other//
     /////////
-    void moveRobot(double X, double Y, double rotation) // input values between O and 1 for all of them
-    {
 
+    double[] moveRobotPowers(double X, double Y, double rotation)
+    {
         double[] arr =
         {
             (Y + X + rotation),
@@ -201,8 +201,6 @@ public class Movement
 
         for(double val:arr) if(val > highestPower) highestPower = val;
         if(highestPower > 1) for(int i = 0; i < 4; i++) arr[i] /= highestPower;
-
-        robot.motorConfig.setMotorsToSeparatePowersArray(arr);
+        return (arr);
     }
-
 }

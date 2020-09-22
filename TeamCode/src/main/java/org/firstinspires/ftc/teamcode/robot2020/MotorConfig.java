@@ -27,6 +27,9 @@ public class MotorConfig
         this.robot = robot;
     }
 
+    ////////
+    //init//
+    ////////
     public void initMotors()
     {
         leftTopMotor = robot.hardwareMap.dcMotor.get("motor" + leftTopMotorNum);
@@ -50,6 +53,9 @@ public class MotorConfig
             motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         }
     }
+    ///////////////////
+    //set motor modes//
+    ///////////////////
     public void setMotorsToCoast()
     {
         for(DcMotor motor: motors)
@@ -57,6 +63,7 @@ public class MotorConfig
             motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         }
     }
+
     public void setMotorsToBrake()
     {
         for(DcMotor motor: motors)
@@ -64,6 +71,7 @@ public class MotorConfig
             motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         }
     }
+
     public void setMotorsToRunWithoutEncoders()
     {
         for(DcMotor motor: motors)
@@ -71,6 +79,7 @@ public class MotorConfig
             motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         }
     }
+
     public void setMotorsToRunWithEncoders()
     {
         for(DcMotor motor: motors)
@@ -78,6 +87,7 @@ public class MotorConfig
             motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         }
     }
+
     public void setMotorsToRunToPosition()
     {
         for(DcMotor motor: motors)
@@ -85,6 +95,51 @@ public class MotorConfig
             motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         }
     }
+
+    ///////////////
+    //motor power//
+    ///////////////
+    public void stopMotors()
+    {
+        for(DcMotor motor: motors)
+        {
+            motor.setPower(0);
+        }
+    }
+
+    public void setMotorsToPower(double power)
+    {
+        for(DcMotor motor: motors)
+        {
+            motor.setPower(power);
+        }
+    }
+
+    public void setMotorsToSeparatePowersArray(double[] powers)
+    {
+        int i = 0;
+        for(DcMotor motor: motors)
+        {
+            motor.setPower(powers[i]);
+            i++;
+        }
+    }
+
+    public double[] getMotorPowers()
+    {
+        double[] arr = new double[4];
+        int i = 0;
+        for(DcMotor motor: motors)
+        {
+            arr[i] = motor.getPower();
+            i++;
+        }
+        return arr;
+    }
+
+    ///////////////
+    //motor ticks//
+    ///////////////
     public void setMotorsToPosition(int ticks, double power)
     {
         for(DcMotor motor: motors)
@@ -114,40 +169,7 @@ public class MotorConfig
             i++;
         }
     }
-    public void stopMotors()
-    {
-        for(DcMotor motor: motors)
-        {
-            motor.setPower(0);
-        }
-    }
-    public void setMotorsToPower(double power)
-    {
-        for(DcMotor motor: motors)
-        {
-            motor.setPower(power);
-        }
-    }
-    public void setMotorsToSeparatePowersArray(double[] powers)
-    {
-        int i = 0;
-        for(DcMotor motor: motors)
-        {
-            motor.setPower(powers[i]);
-            i++;
-        }
-    }
-    public double[] getMotorPowers()
-    {
-        double[] arr = new double[4];
-        int i = 0;
-        for(DcMotor motor: motors)
-        {
-            arr[i] = motor.getPower();
-            i++;
-        }
-        return arr;
-    }
+
     public int[] getMotorPositions()
     {
         int[] arr = new int[4];
@@ -159,6 +181,10 @@ public class MotorConfig
         }
         return arr;
     }
+
+    /////////
+    //other//
+    /////////
     void testMotors(int maxTicks, int minTicks)
     {
         resetEncoders();

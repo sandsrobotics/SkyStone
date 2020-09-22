@@ -101,7 +101,12 @@ public class Robot
     /////////////
     //telemetry//
     /////////////
-    Orientation getAngles() { return imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.DEGREES); }
+    Orientation getAngles()
+    {
+        Orientation angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.DEGREES);
+        angles.thirdAngle *= -1;
+        return angles;
+    }
 
     Velocity getVelocity()
     {
@@ -131,7 +136,6 @@ public class Robot
             if(debug_imu) {
                 if(debug_telemetry)
                 {
-                    telemetry.addData("angles: ", getAngles());
                     telemetry.addData("rotation: ", getAngles().thirdAngle);
                     telemetry.addData("velocity: ", getVelocity());
                     telemetry.addData("angular velocity: ", getAngularVelocity());
@@ -139,7 +143,6 @@ public class Robot
                 }
                 if(debug_dashboard)
                 {
-                    packet.put("angles: ", getAngles());
                     packet.put("rotation: ", getAngles().thirdAngle);
                     packet.put("velocity: ", getVelocity());
                     packet.put("angular velocity: ", getAngularVelocity());
@@ -197,7 +200,7 @@ public class Robot
         } else if (angleError < -180) {
             angleError = angleError + 360;
         }
-        return angleError;
+        return -angleError;
     }
 
     double getCorrectionFromPID(double error, double lastError, double bias,  double IntegralRange) // this method takes values from -180 to 180 and returns a value from -1 to 1
@@ -252,7 +255,7 @@ public class Robot
  */
     double getAngleFromXY(double X, double Y)
     {
-        return Math.atan2(Y, X)*(180 / Math.PI);
+        return Math.atan2(X, Y)*(180 / Math.PI);
     }
     double[] getXYFromAngle(double angle)
     {

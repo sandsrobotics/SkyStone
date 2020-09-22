@@ -27,7 +27,7 @@ public class Test extends LinearOpMode
 
         robot.motorConfig.setMotorsToBrake();
 
-        robot.debug_methods = false;
+        robot.debug_methods = true;
         robot.debug_imu = false;
         robot.debug_motors = false;
 

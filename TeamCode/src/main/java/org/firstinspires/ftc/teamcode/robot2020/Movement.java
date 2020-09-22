@@ -27,15 +27,6 @@ public class Movement
     ////////////////
     //turn methods//
     ////////////////
-
-    void turnWithPower(double power)
-    {
-        robot.motorConfig.leftTopMotor.setPower(power);
-        robot.motorConfig.leftBottomMotor.setPower(power);
-        robot.motorConfig.rightTopMotor.setPower(-power);
-        robot.motorConfig.rightBottomMotor.setPower(-power);
-    }
-
     void turnToAngPID(double targetAngle, double tolerance, int numOfTimesToStayInTolerance, int maxRuntime)
     {
         double I = 0;
@@ -61,10 +52,7 @@ public class Movement
             }
             else numOfTimesInTolerance = 0;
 
-            robot.motorConfig.leftTopMotor.setPower(pow);
-            robot.motorConfig.leftBottomMotor.setPower(pow);
-            robot.motorConfig.rightTopMotor.setPower(-pow);
-            robot.motorConfig.rightBottomMotor.setPower(-pow);
+            moveRobot(0,0,pow);
 
             numOfTimesRun ++;
             if(numOfTimesRun > maxRuntime || Robot.emergencyStop || robot.gamepad1.back || robot.gamepad2.back) break;
@@ -90,7 +78,7 @@ public class Movement
             {
                 currentAngle = robot.getAngles().thirdAngle;
                 error = robot.findAngleError(currentAngle, targetAngle);
-                turnWithPower(error * turnPID.p);
+                moveRobot(0,0,error * turnPID.p);
 
                 if(Math.abs(error) < tolerance)
                 {
@@ -131,12 +119,11 @@ public class Movement
     //////////////////
     //strafe methods//
     //////////////////
-
     void strafeSidewaysTicks(int ticks, double power)
     {
         int[] arr = {ticks, -ticks, -ticks, ticks};
         robot.motorConfig.moveMotorForwardSeparateAmount(arr,power);
-        waitForMotorsToFinish();
+        robot.motorConfig.waitForMotorsToFinish();
     }
 
     void strafeSidewaysInches(double inches, double power)
@@ -147,11 +134,10 @@ public class Movement
     ////////////////
     //move methods//
     ////////////////
-
     void moveForwardInches(double inches, double power)
     {
         robot.motorConfig.moveMotorsForward((int)(ticksPerInchForward * inches), power);
-        waitForMotorsToFinish();
+        robot.motorConfig.waitForMotorsToFinish();
     }
 
     void moveAtAngleWithPower(double angle, double power) //in this method angle should be from -180 to 180
@@ -175,37 +161,48 @@ public class Movement
 
         robot.motorConfig.setMotorsToSeparatePowersArray(arr);
         robot.motorConfig.setMotorsToRunToPosition();
-        waitForMotorsToFinish();
+        robot.motorConfig.waitForMotorsToFinish();
     }
 
     //////////
     //teleOp//
     //////////
-
     void moveForTeleOp(Gamepad gamepad1)
     {
-        robot.motorConfig.leftTopMotor.setPower((-gamepad1.left_stick_y) + gamepad1.left_stick_x + gamepad1.right_stick_x);
-        robot.motorConfig.leftBottomMotor.setPower((-gamepad1.left_stick_y) - gamepad1.left_stick_x + gamepad1.right_stick_x);
-        robot.motorConfig.rightTopMotor.setPower((-gamepad1.left_stick_y) - gamepad1.left_stick_x - gamepad1.right_stick_x);
-        robot.motorConfig.rightBottomMotor.setPower((-gamepad1.left_stick_y) + gamepad1.left_stick_x - gamepad1.right_stick_x);
+        moveRobot(gamepad1.left_stick_x, -gamepad1.left_stick_y, gamepad1.right_stick_x);
     }
 
-    void headlessMoveForTeleOp(Gamepad gamepad1, double offset)
+    void headlessMoveForTeleOp( Gamepad gamepad1, double offset)
     {
-        double curAngle = robot.getAngles().thirdAngle;
-        double gamepadAngle = robot.getAngleFromXY(gamepad1.left_stick_x, gamepad1.left_stick_y);
-        double error = robot.findAngleError(curAngle,gamepadAngle) + offset;
-        double power = Math.max(gamepad1.left_stick_x, gamepad1.left_stick_y);
-
-        robot.motorConfig.setMotorsToSeparatePowersArray(robot.powerForMoveAtAngleV2(error,power));
+        double curAngle = -robot.getAngles().thirdAngle;
+        double gamepadAngle = robot.getAngleFromXY(-gamepad1.left_stick_x, -gamepad1.left_stick_y);
+        double error = -robot.findAngleError(curAngle,gamepadAngle) + offset;
+        double power = Math.max(Math.abs(gamepad1.left_stick_x), Math.abs(gamepad1.left_stick_y));
+        double[] XY = robot.getXYFromAngle(error);
+        XY[0] *= power;
+        XY[1] *= power;
+        moveRobot(XY[0],XY[1],gamepad1.right_stick_x);
     }
 
     /////////
     //other//
     /////////
-
-    void waitForMotorsToFinish()
+    void moveRobot(double X, double Y, double rotation) // input values between O and 1 for all of them
     {
-        while((robot.motorConfig.leftTopMotor.isBusy() || robot.motorConfig.leftBottomMotor.isBusy() || robot.motorConfig.rightTopMotor.isBusy() || robot.motorConfig.rightBottomMotor.isBusy()) && !Robot.emergencyStop && !robot.gamepad1.back && !robot.gamepad2.back){}
+
+        double[] arr =
+        {
+            (Y + X + rotation),
+            (Y - X + rotation),
+            (Y - X - rotation),
+            (Y + X - rotation)
+        };
+        double highestPower = 0;
+
+        for(double val:arr) if(val > highestPower) highestPower = val;
+        if(highestPower > 1) for(int i = 0; i < 4; i++) arr[i] /= highestPower;
+
+        robot.motorConfig.setMotorsToSeparatePowersArray(arr);
     }
+
 }

@@ -210,14 +210,7 @@ public class Movement
         arr = robot.getXYFromAngle(angle);
         double x = arr[0];
         double y = arr[1];
-        arr = new double[4];
 
-        //set power with X,Y
-        arr[0] = (y + x) * basePower;
-        arr[1] = (y - x) * basePower;
-        arr[2] = (y - x) * basePower;
-        arr[3] = (y + x) * basePower;
-
-        return arr;
+        return moveRobotPowers(x,y,0);
     }
 }

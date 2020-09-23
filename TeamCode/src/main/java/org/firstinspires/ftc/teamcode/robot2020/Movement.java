@@ -142,12 +142,12 @@ public class Movement
 
     void moveAtAngleWithPower(double angle, double power) //in this method angle should be from -180 to 180
     {
-        robot.motorConfig.setMotorsToSeparatePowersArray(robot.powerForMoveAtAngleV2(angle,power));
+        robot.motorConfig.setMotorsToSeparatePowersArray(moveAtAnglePowers(angle,power));
     }
 
     void moveAtAngleToInches(double angle, double power, double inches)
     {
-        double[] arr = robot.powerForMoveAtAngleV2(-angle, power);
+        double[] arr = moveAtAnglePowers(-angle, power);
 
         int totalTicks = (int)((inches*ticksPerInchForward*robot.getXYFromAngle(-angle)[1]) + (inches*ticksPerInchSideways*robot.getXYFromAngle(-angle)[0]));
 
@@ -202,5 +202,22 @@ public class Movement
         for(double val:arr) if(val > highestPower) highestPower = val;
         if(highestPower > 1) for(int i = 0; i < 4; i++) arr[i] /= highestPower;
         return (arr);
+    }
+
+    double[] moveAtAnglePowers(double angle, double basePower)
+    {
+        double[] arr;
+        arr = robot.getXYFromAngle(angle);
+        double x = arr[0];
+        double y = arr[1];
+        arr = new double[4];
+
+        //set power with X,Y
+        arr[0] = (y + x) * basePower;
+        arr[1] = (y - x) * basePower;
+        arr[2] = (y - x) * basePower;
+        arr[3] = (y + x) * basePower;
+
+        return arr;
     }
 }

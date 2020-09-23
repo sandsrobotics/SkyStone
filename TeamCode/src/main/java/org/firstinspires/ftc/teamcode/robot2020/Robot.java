@@ -215,48 +215,12 @@ public class Robot
         double output = (Movement.turnPID.p * error) + I + (Movement.turnPID.d * D) + bias;
         return Math.max(Math.min(output, 1), -1);
     }
-/*
-    double[] powerForMoveAtAngle(double angle, double basePower)
-    {
-        double[] arr = {basePower, basePower, basePower, basePower};
-        double sidewaysMultiplier = Movement.ticksPerInchSideways/Movement.ticksPerInchForward;
 
-        if(angle >= 0 && angle <= 90)
-        {
-            double processedAngle = (45 - angle)/45;
-            arr[1] *= processedAngle;
-            arr[2] *= processedAngle;
-        }
-        else if(angle > 90)
-        {
-            double processedAngle = (135 - angle)/45;
-            arr[0] *= processedAngle;
-            arr[1] *= -1;
-            arr[2] *= -1;
-            arr[3] *= processedAngle;
-        }
-        else if(angle >= -90 && angle < 0)
-        {
-            double processedAngle = (angle + 45)/45;
-            arr[0] *= processedAngle;
-            arr[3] *= processedAngle;
-        }
-        else
-        {
-            double processingAngle = (angle + 135)/45;
-            arr[0] *= -1;
-            arr[1] *= processingAngle;
-            arr[2] *= processingAngle;
-            arr[3] *=-1;
-        }
-        return arr;
-    }
-
- */
     double getAngleFromXY(double X, double Y)
     {
         return Math.atan2(X, Y)*(180 / Math.PI);
     }
+
     double[] getXYFromAngle(double angle)
     {
         // deg to rad
@@ -271,22 +235,5 @@ public class Robot
         XY[1] /= total;
 
         return XY;
-    }
-
-    double[] powerForMoveAtAngleV2(double angle, double basePower)
-    {
-        double[] arr;
-        arr = getXYFromAngle(angle);
-        double x = arr[0];
-        double y = arr[1];
-        arr = new double[4];
-
-        //set power with X,Y
-        arr[0] = (y + x) * basePower;
-        arr[1] = (y - x) * basePower;
-        arr[2] = (y - x) * basePower;
-        arr[3] = (y + x) * basePower;
-
-        return arr;
     }
 }

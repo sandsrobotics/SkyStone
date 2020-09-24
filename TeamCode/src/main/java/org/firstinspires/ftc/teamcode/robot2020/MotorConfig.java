@@ -10,7 +10,7 @@ public class MotorConfig
     //////////////////
     //user variables//
     //////////////////
-    protected boolean[] flipMotorDir = {true, false, false, true};
+    protected boolean[] flipMotorDir = {false, true, true, false};
     protected int leftTopMotorNum = 0;
     protected int leftBottomMotorNum = 2;
     protected int rightTopMotorNum = 1;

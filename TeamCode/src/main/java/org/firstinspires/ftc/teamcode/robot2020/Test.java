@@ -5,7 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 @Config
-@TeleOp(name = "test move functions v1.2.6")
+@TeleOp(name = "test move functions v1.2.7")
 public class Test extends LinearOpMode
 {
     Robot robot;

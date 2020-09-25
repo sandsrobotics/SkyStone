@@ -50,8 +50,9 @@ public class Test extends LinearOpMode
             }
             if(gamepad1.x)
             {
-                robot.movement.strafeSidewaysInches(distanceSideways,power);
-                robot.motorConfig.setMotorsToRunWithEncoders();
+                robot.resetZaxis();
+                //robot.movement.strafeSidewaysInches(distanceSideways,power);
+                //robot.motorConfig.setMotorsToRunWithEncoders();
             }
             if(gamepad1.y)
             {

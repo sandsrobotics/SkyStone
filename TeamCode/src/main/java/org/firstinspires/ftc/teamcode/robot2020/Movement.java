@@ -176,7 +176,7 @@ public class Movement
     {
         double curAngle = -robot.getAngles().thirdAngle;
         double gamepadAngle = robot.getAngleFromXY(-gamepad1.left_stick_x, -gamepad1.left_stick_y);
-        double error = -robot.findAngleError(curAngle,gamepadAngle) + offset;
+        double error = -robot.findAngleError(curAngle,gamepadAngle);
         double power = Math.max(Math.abs(gamepad1.left_stick_x), Math.abs(gamepad1.left_stick_y));
         double[] XY = robot.getXYFromAngle(error);
         XY[0] *= power;

@@ -57,6 +57,7 @@ public class Robot
     protected double I = 0;
     protected Gamepad gamepad1;
     protected Gamepad gamepad2;
+    protected double rotationOffset = 0;
     TelemetryPacket packet;
 
     Robot(HardwareMap hardwareMap, Telemetry telemetry, Gamepad gamepad1, Gamepad gamepad2)
@@ -105,6 +106,9 @@ public class Robot
     {
         Orientation angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.DEGREES);
         angles.thirdAngle *= -1;
+        angles.thirdAngle -= rotationOffset;
+        if(angles.thirdAngle < -180) {angles.thirdAngle = 360 + angles.thirdAngle;}
+        else if(angles.thirdAngle > 180){angles.thirdAngle = angles.thirdAngle - 360;}
         return angles;
     }
 
@@ -122,6 +126,8 @@ public class Robot
     {
         return imu.getAcceleration();
     }
+    
+    void resetZaxis(){rotationOffset = -imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZXY, AngleUnit.DEGREES).thirdAngle;}
 
     void startTelemetry()
     {

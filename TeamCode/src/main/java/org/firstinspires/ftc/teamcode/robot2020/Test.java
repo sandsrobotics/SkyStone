@@ -45,7 +45,8 @@ public class Test extends LinearOpMode
             }
             if(gamepad1.b)
             {
-                robot.movement.moveForwardInches(distanceForward,power);
+                robot.movement.moveAtAngleToInches(20,.5,12);
+                //robot.movement.moveForwardInches(distanceForward,power);
                 robot.motorConfig.setMotorsToRunWithEncoders();
             }
             if(gamepad1.x)

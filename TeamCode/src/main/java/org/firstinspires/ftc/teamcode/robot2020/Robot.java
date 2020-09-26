@@ -104,6 +104,7 @@ public class Robot
     /////////////
     Orientation getAngles()
     {
+        addTelemetryDouble("offset: ", rotationOffset);
         Orientation angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.DEGREES);
         angles.thirdAngle *= -1;
         angles.thirdAngle -= rotationOffset;
@@ -127,7 +128,7 @@ public class Robot
         return imu.getAcceleration();
     }
     
-    void resetZaxis(){rotationOffset = -imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZXY, AngleUnit.DEGREES).thirdAngle;}
+    void resetZaxis(){rotationOffset = -imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZXY, AngleUnit.DEGREES).firstAngle;}
 
     void startTelemetry()
     {

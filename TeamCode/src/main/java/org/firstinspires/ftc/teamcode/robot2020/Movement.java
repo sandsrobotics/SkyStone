@@ -147,14 +147,15 @@ public class Movement
 
     void moveAtAngleToInches(double angle, double power, double inches)
     {
-        double[] arr = moveAtAnglePowers(-angle, power);
+        double[] arr = moveAtAnglePowers(angle, power);
+        double[] XY = robot.getXYFromAngle(angle);
 
-        int totalTicks = (int)((inches*ticksPerInchForward*robot.getXYFromAngle(-angle)[1]) + (inches*ticksPerInchSideways*robot.getXYFromAngle(-angle)[0]));
+        double totalTicks = (inches * ticksPerInchForward * Math.abs(XY[1])) + (inches * ticksPerInchSideways * Math.abs(XY[0]));
 
         int i = 0;
         for(DcMotor motor: robot.motorConfig.motors)
         {
-            motor.setTargetPosition(motor.getCurrentPosition() + (int)(totalTicks * arr[i]));
+            motor.setTargetPosition(motor.getCurrentPosition() + (int)(totalTicks * (arr[i]/power)));
             arr[i] = Math.abs(arr[i]);
             i++;
         }
@@ -208,8 +209,8 @@ public class Movement
     {
         double[] arr;
         arr = robot.getXYFromAngle(angle);
-        double x = arr[0];
-        double y = arr[1];
+        double x = arr[0] * basePower;
+        double y = arr[1] * basePower;
 
         return moveRobotPowers(x,y,0);
     }
